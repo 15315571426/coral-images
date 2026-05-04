@@ -1,15 +1,22 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#f2f2f2">
     <title>The Modern Renaissance</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="dns-prefetch" href="https://unpkg.com">
+    <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
+    <link rel="dns-prefetch" href="https://raw.githubusercontent.com">
+    <link rel="dns-prefetch" href="https://public.flourish.studio">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
             corePlugins: { preflight: false },
         };
     </script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js" defer></script>
     <style>
         /* 引入谷歌字体：Cormorant Garamond（衬线字体，用于标题）、Manrope（无衬线字体，用于正文） */
         @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&family=Manrope:wght@200;300;400;500&display=swap');
@@ -37,6 +44,11 @@
             box-sizing: border-box;
         }
 
+        html {
+            -webkit-text-size-adjust: 100%;
+            text-size-adjust: 100%;
+        }
+
         /* 页面主体样式 */
         body {
             background-color: var(--bg);                /* 使用全局背景色变量 */
@@ -44,8 +56,12 @@
             font-family: 'Manrope', sans-serif;         /* 全局默认字体 */
             overflow-x: hidden;                         /* 隐藏水平滚动条 */
             overflow-y: auto;                           /* 开启纵向滚动用于分页 */
-            width: 100vw;                               /* 宽度占满视口 */
-            height: 100vh;                              /* 固定一屏高度 */
+            width: 100%;
+            max-width: 100%;
+            min-height: 100vh;
+            min-height: 100svh;
+            min-height: 100dvh;
+            padding-bottom: env(safe-area-inset-bottom, 0px);
             -webkit-font-smoothing: antialiased;        /* 苹果浏览器字体抗锯齿 */
             -moz-osx-font-smoothing: grayscale;         /* 火狐浏览器字体灰度平滑 */
             scroll-behavior: smooth;                    /* 平滑滚动 */
@@ -61,6 +77,9 @@
             left: 0;
             width: 100%;
             padding: 1.2rem 2rem;
+            padding-top: max(1.2rem, calc(1.2rem + env(safe-area-inset-top, 0px)));
+            padding-right: max(2rem, env(safe-area-inset-right, 0px));
+            padding-left: max(2rem, env(safe-area-inset-left, 0px));
             z-index: 100;
             display: flex;
             justify-content: space-between;
@@ -107,10 +126,16 @@
             .global-thesis-nav { padding: 1rem 1.25rem; }
         }
 
-        /* 章节容器：每个章节占满视口高度，相对定位（用于内部绝对定位元素），隐藏溢出 */
+        /* 章节容器：每个章节占满视口高度（dvh/svh 适配移动浏览器 chrome / 横屏） */
         .chapter {
+            min-height: 100vh;
+            min-height: 100svh;
+            min-height: 100dvh;
             height: 100vh;
+            height: 100svh;
+            height: 100dvh;
             width: 100%;
+            max-width: 100%;
             position: relative;
             overflow: hidden;
             scroll-snap-align: start;
@@ -157,7 +182,11 @@
             width: 100%;
             height: 100%;
             z-index: 10;
-            padding: calc(var(--space-unit) * 2);  /* 内边距为2倍间距单位 */
+            padding: calc(var(--space-unit) * 2);
+            padding-top: max(calc(var(--space-unit) * 2), env(safe-area-inset-top, 0px));
+            padding-left: max(calc(var(--space-unit) * 2), env(safe-area-inset-left, 0px));
+            padding-right: max(calc(var(--space-unit) * 2), env(safe-area-inset-right, 0px));
+            padding-bottom: max(calc(var(--space-unit) * 2), env(safe-area-inset-bottom, 0px));
             display: flex;
             flex-direction: column;                /* 垂直排列子元素 */
             justify-content: space-between;        /* 子元素上下分布，中间留空 */
@@ -282,10 +311,11 @@
             letter-spacing: 0.01em;
         }
 
-        /* 封面首屏：强化标题层级、上移文字重心、收窄左侧冗余留白（仅此 .chapter-cover） */
+        /* 封面首屏：强化标题层级、垂直重心与右侧图形协调、收窄左侧冗余留白（仅此 .chapter-cover） */
         .chapter-cover .ui-layer main {
-            align-items: flex-start;
-            padding-top: clamp(0.25rem, 2.75vh, 2.25rem);
+            align-items: center;
+            padding-top: 0;
+            padding-bottom: 0;
         }
 
         .chapter-cover .content-left {
@@ -431,9 +461,13 @@
             z-index: 2;
             width: 100%;
             height: 100%;
+            max-width: 100%;
             display: grid;
             grid-template-rows: auto 1fr; /* 第一行自适应高度，第二行占满剩余 */
             padding: 4rem 15%;
+            padding-left: max(15%, env(safe-area-inset-left, 0px));
+            padding-right: max(15%, env(safe-area-inset-right, 0px));
+            padding-bottom: max(4rem, env(safe-area-inset-bottom, 0px));
             box-sizing: border-box;
         }
 
@@ -490,6 +524,8 @@
             background: transparent;
             overflow-y: auto; /* 垂直滚动 */
             scrollbar-width: none; /* 火狐隐藏滚动条 */
+            touch-action: pan-y;
+            -webkit-overflow-scrolling: touch;
         }
         
         /* 日记编辑区滚动条：webkit内核浏览器隐藏 */
@@ -611,20 +647,25 @@
             /* 交互页界面层：内边距减小 */
             .interface-layer {
                 padding: 2rem 8%;
+                padding-left: max(8%, env(safe-area-inset-left, 0px));
+                padding-right: max(8%, env(safe-area-inset-right, 0px));
+                padding-bottom: max(2rem, env(safe-area-inset-bottom, 0px));
             }
             /* 日记编辑区：字号减小 */
             .journal-area {
                 font-size: 1.2rem;
             }
 
-            /* 封面：小屏仍以更大标题为主，上移、减少悬空留白 */
+            /* 封面：小屏与大屏一致，标题区在 main 内垂直居中，避免贴上区 */
             .chapter-cover .ui-layer main {
+                align-items: center;
                 padding-top: 0;
+                padding-bottom: 0;
             }
             .chapter-cover .content-left {
                 max-width: min(86vw, 32rem);
                 padding-left: 0;
-                margin-top: clamp(2vh, 5vh, 7vh);
+                margin-top: 0;
             }
             .chapter-cover h1 {
                 font-size: clamp(3.125rem, 10.75vw, 5.875rem);
@@ -643,11 +684,13 @@
             justify-content: center;
             align-items: center;
             padding: 20px;
+            padding-left: max(20px, env(safe-area-inset-left, 0px));
+            padding-right: max(20px, env(safe-area-inset-right, 0px));
         }
 
         .chapter-3 .chapter3-chart-container {
             width: 100%;
-            max-width: 900px;
+            max-width: min(900px, 100%);
             background-color: #F2F2F2;
             padding: 30px;
             border-radius: 12px;
@@ -680,6 +723,8 @@
         @media (max-width: 768px) {
             .chapter-3 .chapter3-chart-container {
                 padding: 20px;
+                padding-left: max(20px, env(safe-area-inset-left, 0px));
+                padding-right: max(20px, env(safe-area-inset-right, 0px));
             }
 
             .chapter-3 .chapter3-chart-wrap {
@@ -687,9 +732,18 @@
             }
         }
 
+        @media (max-height: 520px) and (orientation: landscape) {
+            .chapter-3 .chapter3-chart-container {
+                padding: 14px 18px;
+            }
+            .chapter-3 .chapter3-chart-wrap {
+                height: min(55vh, 280px);
+            }
+        }
+
         .page-scroll-progress {
             position: fixed;
-            top: 0;
+            top: env(safe-area-inset-top, 0);
             left: 0;
             width: 100%;
             height: 3px;
@@ -1271,6 +1325,26 @@ I am trying to listen. To let the reef’s story be heard.
             // 光标跟随器位置：基于鼠标坐标，居中（translate(-50%,-50%)在CSS中已设置，这里直接赋值）
             cursorFollower.style.transform = `translate(${e.clientX}px, ${e.clientY}px)`;
         });
+
+        window.addEventListener('touchmove', e => {
+            if (!e.touches || !e.touches.length) return;
+            const t = e.touches[0];
+            mouse.x = t.clientX;
+            mouse.y = t.clientY;
+            cursorFollower.style.transform = `translate(${t.clientX}px, ${t.clientY}px)`;
+        }, { passive: true });
+
+        window.addEventListener(
+            'touchstart',
+            e => {
+                if (!e.touches || !e.touches.length) return;
+                const t = e.touches[0];
+                mouse.x = t.clientX;
+                mouse.y = t.clientY;
+                cursorFollower.style.transform = `translate(${t.clientX}px, ${t.clientY}px)`;
+            },
+            { passive: true, capture: true }
+        );
 
         // 查询输入框输入事件：粒子速度随机变化（模拟交互反馈）
         document.querySelector('.query-input').addEventListener('input', () => {
@@ -1910,6 +1984,12 @@ I am trying to listen. To let the reef’s story be heard.
                 width: 100%;
                 height: 100%;
             }
+            /* 长按珊瑚生长：移动端禁用默认触控滚动，交由 WebGL / OrbitControls 处理 */
+            #append-root #append-coral-garden-section canvas {
+                touch-action: none;
+                -webkit-user-select: none;
+                user-select: none;
+            }
             #append-root #append-coral-garden-section .cg-tooltip {
                 position: fixed;
                 z-index: 200;
@@ -2090,6 +2170,11 @@ I am trying to listen. To let the reef’s story be heard.
                 width: 100%;
                 height: 100%;
                 z-index: 5;
+            }
+            #append-ocean-narrative #ocean-narr-canvas-container canvas {
+                touch-action: none;
+                -webkit-user-select: none;
+                user-select: none;
             }
             #append-ocean-narrative #ocean-narr-svg-overlay {
                 position: absolute;
@@ -2354,6 +2439,15 @@ I am trying to listen. To let the reef’s story be heard.
                 font-weight: 400;
                 letter-spacing: 0.02em;
             }
+            /* 低矮横屏：压缩纵向留白，避免翻页内容与刘海/导航条挤压 */
+            @media (max-height: 460px) and (orientation: landscape) {
+                #append-root .append-panel:not(#append-credit-section) {
+                    padding-block: clamp(2.75rem, 6vh, 4rem);
+                }
+                #append-root .append-chart-svg { height: clamp(120px, 36vh, 200px); }
+                #append-root #append-reefMap { height: clamp(140px, 40vh, 220px); }
+                #append-root .append-flourish-wrap { min-height: clamp(200px, 52vh, 360px); }
+            }
             @media (max-width: 900px) {
                 #append-ocean-narrative.append-panel {
                     padding: 0;
@@ -2432,7 +2526,7 @@ I am trying to listen. To let the reef’s story be heard.
                     <div class="append-viz-title">01 · Global Reef Distribution</div>
                     <div class="append-map-atlas">
                         <div class="append-map-interactive">
-                            <img class="append-map-image" alt="Allen Coral Atlas global coral reef regions" src="https://raw.githubusercontent.com/15315571426/coral-images/refs/heads/main/fourth-page-map-61a512.png">
+                            <img class="append-map-image" alt="Allen Coral Atlas global coral reef regions" src="https://raw.githubusercontent.com/15315571426/coral-images/refs/heads/main/fourth-page-map-61a512.png" loading="lazy" decoding="async" fetchpriority="low">
                         </div>
                         <div class="append-region-legend">
                             <div class="append-region-legend-title">Region Descriptor*</div>
@@ -3018,7 +3112,6 @@ I am trying to listen. To let the reef’s story be heard.
                     <div class="append-viz-title">02 · Bleaching Rate 1884—2019</div>
                     <div class="append-flourish-wrap">
                         <div class="flourish-embed flourish-heatmap" data-src="visualisation/28786550">
-                            <script src="https://public.flourish.studio/resources/embed.js"></script>
                             <noscript><img src="https://public.flourish.studio/visualisation/28786550/thumbnail" width="100%" alt="heatmap visualization"></noscript>
                         </div>
                     </div>
@@ -3073,53 +3166,53 @@ I am trying to listen. To let the reef’s story be heard.
                     <div class="marquee-track gap-10 py-10" id="photo-wall">
                         <!-- Original Set -->
                         <div class="flex-shrink-0 photo-card -rotate-2">
-                            <img src="https://images.unsplash.com/photo-1546026423-cc4642628d2b?auto=format&fit=crop&q=80&w=800" class="w-full h-44 object-cover pointer-events-none" alt="">
+                            <img src="https://images.unsplash.com/photo-1546026423-cc4642628d2b?auto=format&fit=crop&q=85&w=640" class="w-full h-44 object-cover pointer-events-none" alt="" loading="lazy" decoding="async">
                         </div>
                         <div class="flex-shrink-0 photo-card rotate-1">
-                            <img src="https://images.unsplash.com/photo-1544552866-d3ed42536cfd?auto=format&fit=crop&q=80&w=800" class="w-full h-44 object-cover pointer-events-none" alt="">
+                            <img src="https://images.unsplash.com/photo-1544552866-d3ed42536cfd?auto=format&fit=crop&q=85&w=640" class="w-full h-44 object-cover pointer-events-none" alt="" loading="lazy" decoding="async">
                         </div>
                         <div class="flex-shrink-0 photo-card -rotate-1">
-                            <img src="https://raw.githubusercontent.com/15315571426/coral-images/c92594ed8f03573a144175770e3a04edfa85e5d5/1.jpg" class="w-full h-44 object-cover pointer-events-none" alt="">
+                            <img src="https://raw.githubusercontent.com/15315571426/coral-images/c92594ed8f03573a144175770e3a04edfa85e5d5/1.jpg" class="w-full h-44 object-cover pointer-events-none" alt="" loading="lazy" decoding="async">
                         </div>
                         <div class="flex-shrink-0 photo-card rotate-2">
-                            <img src="https://raw.githubusercontent.com/15315571426/coral-images/c92594ed8f03573a144175770e3a04edfa85e5d5/2.jpg" class="w-full h-44 object-cover pointer-events-none" alt="">
+                            <img src="https://raw.githubusercontent.com/15315571426/coral-images/c92594ed8f03573a144175770e3a04edfa85e5d5/2.jpg" class="w-full h-44 object-cover pointer-events-none" alt="" loading="lazy" decoding="async">
                         </div>
                         <div class="flex-shrink-0 photo-card -rotate-3">
-                            <img src="https://raw.githubusercontent.com/15315571426/coral-images/c92594ed8f03573a144175770e3a04edfa85e5d5/3.jpg" class="w-full h-44 object-cover pointer-events-none" alt="">
+                            <img src="https://raw.githubusercontent.com/15315571426/coral-images/c92594ed8f03573a144175770e3a04edfa85e5d5/3.jpg" class="w-full h-44 object-cover pointer-events-none" alt="" loading="lazy" decoding="async">
                         </div>
                         <div class="flex-shrink-0 photo-card rotate-1">
-                            <img src="https://raw.githubusercontent.com/15315571426/coral-images/c92594ed8f03573a144175770e3a04edfa85e5d5/4.jpg" class="w-full h-44 object-cover pointer-events-none" alt="">
+                            <img src="https://raw.githubusercontent.com/15315571426/coral-images/c92594ed8f03573a144175770e3a04edfa85e5d5/4.jpg" class="w-full h-44 object-cover pointer-events-none" alt="" loading="lazy" decoding="async">
                         </div>
                         <div class="flex-shrink-0 photo-card -rotate-2">
-                            <img src="https://raw.githubusercontent.com/15315571426/coral-images/c92594ed8f03573a144175770e3a04edfa85e5d5/5.jpg" class="w-full h-44 object-cover pointer-events-none" alt="">
+                            <img src="https://raw.githubusercontent.com/15315571426/coral-images/c92594ed8f03573a144175770e3a04edfa85e5d5/5.jpg" class="w-full h-44 object-cover pointer-events-none" alt="" loading="lazy" decoding="async">
                         </div>
                         <div class="flex-shrink-0 photo-card -rotate-1">
-                            <img src="https://raw.githubusercontent.com/15315571426/coral-images/c92594ed8f03573a144175770e3a04edfa85e5d5/7.png" class="w-full h-44 object-cover pointer-events-none" alt="">
+                            <img src="https://raw.githubusercontent.com/15315571426/coral-images/c92594ed8f03573a144175770e3a04edfa85e5d5/7.png" class="w-full h-44 object-cover pointer-events-none" alt="" loading="lazy" decoding="async">
                         </div>
                         <!-- Duplicated Set for Loop -->
                         <div class="flex-shrink-0 photo-card -rotate-2">
-                            <img src="https://images.unsplash.com/photo-1546026423-cc4642628d2b?auto=format&fit=crop&q=80&w=800" class="w-full h-44 object-cover pointer-events-none" alt="">
+                            <img src="https://images.unsplash.com/photo-1546026423-cc4642628d2b?auto=format&fit=crop&q=85&w=640" class="w-full h-44 object-cover pointer-events-none" alt="" loading="lazy" decoding="async">
                         </div>
                         <div class="flex-shrink-0 photo-card rotate-1">
-                            <img src="https://images.unsplash.com/photo-1544552866-d3ed42536cfd?auto=format&fit=crop&q=80&w=800" class="w-full h-44 object-cover pointer-events-none" alt="">
+                            <img src="https://images.unsplash.com/photo-1544552866-d3ed42536cfd?auto=format&fit=crop&q=85&w=640" class="w-full h-44 object-cover pointer-events-none" alt="" loading="lazy" decoding="async">
                         </div>
                         <div class="flex-shrink-0 photo-card -rotate-1">
-                            <img src="https://raw.githubusercontent.com/15315571426/coral-images/c92594ed8f03573a144175770e3a04edfa85e5d5/1.jpg" class="w-full h-44 object-cover pointer-events-none" alt="">
+                            <img src="https://raw.githubusercontent.com/15315571426/coral-images/c92594ed8f03573a144175770e3a04edfa85e5d5/1.jpg" class="w-full h-44 object-cover pointer-events-none" alt="" loading="lazy" decoding="async">
                         </div>
                         <div class="flex-shrink-0 photo-card rotate-2">
-                            <img src="https://raw.githubusercontent.com/15315571426/coral-images/c92594ed8f03573a144175770e3a04edfa85e5d5/2.jpg" class="w-full h-44 object-cover pointer-events-none" alt="">
+                            <img src="https://raw.githubusercontent.com/15315571426/coral-images/c92594ed8f03573a144175770e3a04edfa85e5d5/2.jpg" class="w-full h-44 object-cover pointer-events-none" alt="" loading="lazy" decoding="async">
                         </div>
                         <div class="flex-shrink-0 photo-card -rotate-3">
-                            <img src="https://raw.githubusercontent.com/15315571426/coral-images/c92594ed8f03573a144175770e3a04edfa85e5d5/3.jpg" class="w-full h-44 object-cover pointer-events-none" alt="">
+                            <img src="https://raw.githubusercontent.com/15315571426/coral-images/c92594ed8f03573a144175770e3a04edfa85e5d5/3.jpg" class="w-full h-44 object-cover pointer-events-none" alt="" loading="lazy" decoding="async">
                         </div>
                         <div class="flex-shrink-0 photo-card rotate-1">
-                            <img src="https://raw.githubusercontent.com/15315571426/coral-images/c92594ed8f03573a144175770e3a04edfa85e5d5/4.jpg" class="w-full h-44 object-cover pointer-events-none" alt="">
+                            <img src="https://raw.githubusercontent.com/15315571426/coral-images/c92594ed8f03573a144175770e3a04edfa85e5d5/4.jpg" class="w-full h-44 object-cover pointer-events-none" alt="" loading="lazy" decoding="async">
                         </div>
                         <div class="flex-shrink-0 photo-card -rotate-2">
-                            <img src="https://raw.githubusercontent.com/15315571426/coral-images/c92594ed8f03573a144175770e3a04edfa85e5d5/5.jpg" class="w-full h-44 object-cover pointer-events-none" alt="">
+                            <img src="https://raw.githubusercontent.com/15315571426/coral-images/c92594ed8f03573a144175770e3a04edfa85e5d5/5.jpg" class="w-full h-44 object-cover pointer-events-none" alt="" loading="lazy" decoding="async">
                         </div>
                         <div class="flex-shrink-0 photo-card -rotate-1">
-                            <img src="https://raw.githubusercontent.com/15315571426/coral-images/c92594ed8f03573a144175770e3a04edfa85e5d5/7.png" class="w-full h-44 object-cover pointer-events-none" alt="">
+                            <img src="https://raw.githubusercontent.com/15315571426/coral-images/c92594ed8f03573a144175770e3a04edfa85e5d5/7.png" class="w-full h-44 object-cover pointer-events-none" alt="" loading="lazy" decoding="async">
                         </div>
                     </div>
                 </div>
@@ -3576,11 +3669,36 @@ I am trying to listen. To let the reef’s story be heard.
                 }
             });
 
+            function isTouchPagingExempt(el) {
+                if (!el || !el.closest) return false;
+                if (isEditableTarget(el)) return true;
+                return !!el.closest(
+                    '#append-coral-garden-section, ' +
+                    '.append-map-interactive, ' +
+                    '#ocean-narr-canvas-container, ' +
+                    '#ocean-narr-labels-container, ' +
+                    '#ocean-narr-svg-overlay .cause-arrow-group, ' +
+                    '.chart-modal, ' +
+                    '.append-flourish-wrap, ' +
+                    '.flourish-embed, ' +
+                    '#coralChart, ' +
+                    '.chapter-3-chart-wrap, ' +
+                    'iframe'
+                );
+            }
+
+            let touchPagingBlocked = false;
+
             window.addEventListener('touchstart', (e) => {
                 touchStartY = e.touches[0].clientY;
+                touchPagingBlocked = isTouchPagingExempt(e.target);
             }, { passive: true });
 
             window.addEventListener('touchend', (e) => {
+                if (touchPagingBlocked) {
+                    touchPagingBlocked = false;
+                    return;
+                }
                 if (locked) return;
                 wheelAccum = 0;
                 wheelDirection = 0;
@@ -3918,12 +4036,15 @@ I am trying to listen. To let the reef’s story be heard.
 
                 applyRendererSize(size0.width, size0.height);
 
-                renderer.domElement.addEventListener('mousemove', onMouseMove);
+                renderer.domElement.addEventListener('pointermove', onMouseMove);
                 window.addEventListener('resize', onWindowResize);
+
+                renderer.domElement.style.touchAction = 'none';
 
                 let animationFrameId;
                 let lastSyncedAnimState = CoralGardenAnimState.IDLE;
                 let lastHoldProgressBucket = -1;
+                let holdPointerId = null;
 
                 const animate = () => {
                     if (cancelled) return;
@@ -4057,17 +4178,13 @@ I am trying to listen. To let the reef’s story be heard.
 
                 animate();
 
-                const handleMouseDown = () => {
-                    if (cancelled || loopState !== CoralGardenAnimState.IDLE) return;
-                    loopState = CoralGardenAnimState.HOLDING;
-                    holdStartTime = performance.now();
-                    lastHoldProgressBucket = -1;
-                    setHoldProgress(0);
-                    setIsHolding(true);
-                    setCurrentStatus('The seeds are awakening...');
-                };
-
-                const handleMouseUp = () => {
+                const endHoldInteraction = () => {
+                    if (holdPointerId !== null) {
+                        try {
+                            renderer.domElement.releasePointerCapture(holdPointerId);
+                        } catch (_) { /* ignore */ }
+                    }
+                    holdPointerId = null;
                     if (cancelled || loopState !== CoralGardenAnimState.HOLDING) return;
                     loopState = CoralGardenAnimState.IDLE;
                     lastHoldProgressBucket = -1;
@@ -4076,16 +4193,45 @@ I am trying to listen. To let the reef’s story be heard.
                     setCurrentStatus('Hold to watch the reef come alive.');
                 };
 
-                renderer.domElement.addEventListener('mousedown', handleMouseDown);
-                window.addEventListener('mouseup', handleMouseUp);
+                const handlePointerDown = (e) => {
+                    if (e.pointerType === 'mouse' && e.button !== 0) return;
+                    if (cancelled || loopState !== CoralGardenAnimState.IDLE) return;
+                    holdPointerId = e.pointerId;
+                    try {
+                        renderer.domElement.setPointerCapture(e.pointerId);
+                    } catch (_) { /* ignore */ }
+                    loopState = CoralGardenAnimState.HOLDING;
+                    holdStartTime = performance.now();
+                    lastHoldProgressBucket = -1;
+                    setHoldProgress(0);
+                    setIsHolding(true);
+                    setCurrentStatus('The seeds are awakening...');
+                };
+
+                const handlePointerUp = (e) => {
+                    if (holdPointerId !== null && e && e.pointerId !== holdPointerId) return;
+                    endHoldInteraction();
+                };
+
+                const handleWindowBlur = () => {
+                    if (holdPointerId === null) return;
+                    endHoldInteraction();
+                };
+
+                renderer.domElement.addEventListener('pointerdown', handlePointerDown);
+                renderer.domElement.addEventListener('pointerup', handlePointerUp);
+                renderer.domElement.addEventListener('pointercancel', handlePointerUp);
+                window.addEventListener('blur', handleWindowBlur);
 
                 return () => {
                     cancelled = true;
                     cancelAnimationFrame(animationFrameId);
                     if (tooltipMoveRaf) cancelAnimationFrame(tooltipMoveRaf);
-                    renderer.domElement.removeEventListener('mousemove', onMouseMove);
-                    renderer.domElement.removeEventListener('mousedown', handleMouseDown);
-                    window.removeEventListener('mouseup', handleMouseUp);
+                    renderer.domElement.removeEventListener('pointermove', onMouseMove);
+                    renderer.domElement.removeEventListener('pointerdown', handlePointerDown);
+                    renderer.domElement.removeEventListener('pointerup', handlePointerUp);
+                    renderer.domElement.removeEventListener('pointercancel', handlePointerUp);
+                    window.removeEventListener('blur', handleWindowBlur);
                     window.removeEventListener('resize', onWindowResize);
                     if (ro && containerRef.current) ro.unobserve(containerRef.current);
                     if (controls && typeof controls.dispose === 'function') controls.dispose();
@@ -4116,6 +4262,8 @@ I am trying to listen. To let the reef’s story be heard.
                                     width={40}
                                     height={40}
                                     draggable={false}
+                                    loading="lazy"
+                                    decoding="async"
                                 />
                                 <div className="cg-tooltip-names-text">
                                     <h3 className="cg-tooltip-title">{CORAL_GARDEN_DATA[hoveredTypeIdx].nameEn}</h3>
