@@ -1,0 +1,4188 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Modern Renaissance</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            corePlugins: { preflight: false },
+        };
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+    <style>
+        /* 引入谷歌字体：Cormorant Garamond（衬线字体，用于标题）、Manrope（无衬线字体，用于正文） */
+        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&family=Manrope:wght@200;300;400;500&display=swap');
+
+        /* 全局CSS变量定义 - 便于统一管理样式，修改时只需改变量值 */
+        :root {
+            --bg: #f2f2f2;                  /* 全局背景色（与附录区统一浅灰） */
+            --text-main: #141414;           /* 主要文本颜色 */
+            --text-muted: #555555;          /* 次要/弱化文本颜色 */
+            --accent-blue: #0A3A8A;         /* 强调色（蓝色）- 珊瑚礁主题色 */ 
+            --space-unit: max(2vw, 20px);   /* 间距单位（响应式，最小20px） */
+            /* 新增尝试页面的变量 */
+            --bg-color: #f2f2f2;            /* 第二章（交互页）背景色，与全局浅灰一致 */
+            --highlight-color: #0A3A8A;     /* 第三章高亮色（与强调蓝一致） */
+            --organism-core: #ffffff;       /* 预留：生物粒子核心色 */
+            --organism-outer: #808080;      /* 预留：生物粒子外围色 */
+            --font-main: 'Helvetica Neue', Helvetica, Arial, sans-serif; /* 第三章主字体 */
+            --font-mono: 'Courier Prime', 'Courier New', monospace;       /* 第三章等宽字体（用于标签/状态提示） */
+        }
+
+        /* 全局重置：清除默认边距、内边距，盒模型改为border-box（宽高包含边框/内边距） */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* 页面主体样式 */
+        body {
+            background-color: var(--bg);                /* 使用全局背景色变量 */
+            color: var(--text-main);                    /* 使用主要文本色变量 */
+            font-family: 'Manrope', sans-serif;         /* 全局默认字体 */
+            overflow-x: hidden;                         /* 隐藏水平滚动条 */
+            overflow-y: auto;                           /* 开启纵向滚动用于分页 */
+            width: 100vw;                               /* 宽度占满视口 */
+            height: 100vh;                              /* 固定一屏高度 */
+            -webkit-font-smoothing: antialiased;        /* 苹果浏览器字体抗锯齿 */
+            -moz-osx-font-smoothing: grayscale;         /* 火狐浏览器字体灰度平滑 */
+            scroll-behavior: smooth;                    /* 平滑滚动 */
+            scroll-snap-type: y mandatory;              /* 强制纵向分页吸附 */
+            overscroll-behavior-y: contain;             /* 防止滚动链 */
+            cursor: default;                            /* 恢复默认光标（取消全局隐藏） */
+        }
+
+        /* 全局置顶导航：与封面 header 一致的浅底毛玻璃 + 深色字（第二屏起显示） */
+        .global-thesis-nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 1.2rem 2rem;
+            z-index: 100;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-family: 'Cormorant Garamond', serif;
+            color: var(--text-main);
+            background: rgba(242, 242, 242, 0.82);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            border-bottom: 1px solid rgba(20, 20, 20, 0.06);
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        .global-thesis-logo {
+            font-size: 1.5rem;
+            letter-spacing: 0.05em;
+            font-weight: 600;
+            font-style: italic;
+            text-transform: none;
+        }
+        .global-thesis-meta {
+            display: flex;
+            gap: 1.4rem;
+            font-family: 'Manrope', sans-serif;
+            font-size: 0.75rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            font-weight: 500;
+            color: var(--text-muted);
+        }
+        body.past-cover .global-thesis-nav {
+            opacity: 1;
+            visibility: visible;
+            pointer-events: auto;
+        }
+        /* 交互章节界面：内部顶padding加量，避免与全屏画布、顶栏重叠 */
+        body.past-cover .chapter-2 .interface-layer {
+            padding-top: 5.75rem;
+        }
+        @media (max-width: 900px) {
+            .global-thesis-meta { display: none; }
+            .global-thesis-nav { padding: 1rem 1.25rem; }
+        }
+
+        /* 章节容器：每个章节占满视口高度，相对定位（用于内部绝对定位元素），隐藏溢出 */
+        .chapter {
+            height: 100vh;
+            width: 100%;
+            position: relative;
+            overflow: hidden;
+            scroll-snap-align: start;
+            scroll-snap-stop: always;
+        }
+
+        /* Three.js画布容器（第一屏粒子效果）：绝对定位覆盖整个章节，层级1，不响应指针事件（避免遮挡UI） */
+        #canvas-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        /* 几何装饰元素（第一屏蓝色块）：绝对定位，蓝色强调色，混合模式为正片叠底，透明度0.8，带浮动动画 */
+        .geometric-intervention {
+            position: absolute;
+            top: 45%;
+            left: 68%;
+            width: 25vw;
+            height: 35vh;
+            background-color: var(--accent-blue);
+            transform: translate(-50%, -50%);  /* 居中（基于自身宽高） */
+            z-index: 0;                        /* 层级低于UI */
+            mix-blend-mode: multiply;          /* 混合模式：正片叠底（加深背景） */
+            opacity: 0.8;                      /* 透明度 */
+            animation: float-plane 20s ease-in-out infinite alternate; /* 浮动动画 */
+        }
+
+        /* 几何装饰元素浮动动画：轻微位移、旋转、缩放，模拟海洋波动 */
+        @keyframes float-plane {
+            0% { transform: translate(-50%, -50%) rotate(0deg) scale(1); }
+            100% { transform: translate(-48%, -49%) rotate(1deg) scale(1.02); }
+        }
+
+        /* UI层容器：绝对定位覆盖整个章节，层级10（最高），内边距，弹性布局（垂直分布头部/主体/底部） */
+        .ui-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10;
+            padding: calc(var(--space-unit) * 2);  /* 内边距为2倍间距单位 */
+            display: flex;
+            flex-direction: column;                /* 垂直排列子元素 */
+            justify-content: space-between;        /* 子元素上下分布，中间留空 */
+            pointer-events: none;                  /* 容器本身不响应指针事件（子元素单独开启） */
+        }
+
+        /* UI层子元素：恢复指针事件（确保按钮/链接可点击） */
+        .ui-layer > * {
+            pointer-events: auto;
+        }
+
+        /* 头部（Logo+导航）：弹性布局，两端对齐，字体样式（小字号、大写、字间距、粗体） */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            font-size: 0.75rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            font-weight: 500;
+        }
+
+        /* Logo样式：衬线字体、斜体、更大字号、小字间距、非大写 */
+        .logo {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.5rem;
+            letter-spacing: 0.05em;
+            font-weight: 600;
+            text-transform: none;
+            font-style: italic;
+        }
+
+        /* 导航链接容器：弹性布局，间距为2倍间距单位 */
+        .nav-links {
+            display: flex;
+            gap: calc(var(--space-unit) * 2);
+        }
+
+        /* 单个导航链接：指针为手型，相对定位（用于伪元素下划线），溢出隐藏（限制下划线动画），底部内边距 */
+        .nav-link {
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            padding-bottom: 4px;
+        }
+
+        /* 导航链接下划线伪元素：初始在左侧隐藏，hover时滑入 */
+        .nav-link::after {
+            content: '';                        /* 空内容 */
+            position: absolute;                 /* 绝对定位（相对于.nav-link） */
+            bottom: 0;                          /* 贴底部 */
+            left: 0;                            /* 贴左侧 */
+            width: 100%;                        /* 宽度100% */
+            height: 1px;                        /* 高度1px（下划线） */
+            background-color: var(--text-main); /* 下划线颜色（主文本色） */
+            transform: translateX(-101%);       /* 初始向左移出可视区域 */
+            transition: transform 0.4s cubic-bezier(0.19, 1, 0.22, 1); /* 缓动动画 */
+        }
+
+        /* 导航链接hover时：下划线滑入（移到0位置） */
+        .nav-link:hover::after {
+            transform: translateX(0);
+        }
+
+        /* 主体内容区：网格布局（两列均分），垂直居中，相对定位，占满剩余高度 */
+        main {
+            display: grid;
+            grid-template-columns: 1fr;
+            align-items: center;
+            flex-grow: 1;
+            position: relative;
+        }
+
+        /* 左侧内容容器：最大宽度45vw，左内边距，保留3D变换（用于视差效果） */
+        .content-left {
+            max-width: 45vw;
+            padding-left: calc(var(--space-unit) * 2);
+            transform-style: preserve-3d;
+        }
+
+        /* 主标题样式：衬线字体，响应式字号（3rem~7rem），粗体，行高紧凑，字间距微负，底部间距，文本阴影（提亮），层级20（高于几何装饰） */
+        h1 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: clamp(3rem, 6vw, 7rem);  /* 响应式字号：最小3rem，最大7rem，基于视口宽度6vw */
+            font-weight: 600;
+            line-height: 0.9;                   /* 行高紧凑，减少行间距 */
+            letter-spacing: -0.02em;            /* 字间距微负，更紧凑 */
+            margin-bottom: calc(var(--space-unit) * 1.5); /* 底部间距1.5倍单位 */
+            color: #0a0a0a;                     /* 深黑色（比text-main更深） */
+            max-width: 60%;                     /* 最大宽度60%，避免过长 */
+            text-align: left;
+            text-shadow: 0 2px 30px rgba(255,255,255,0.8), 0 0 60px rgba(255,255,255,0.4); /* 白色阴影，提亮标题 */
+            position: relative;
+            z-index: 20;
+        }
+
+        /* 副标题容器：相对定位，左内边距（给竖线留空间） */
+        .subhead-container {
+            position: relative;
+            padding-left: 20px;
+        }
+
+        /* 副标题左侧竖线伪元素：绝对定位，1px宽，蓝色强调色，垂直居中 */
+        .subhead-container::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 6px;
+            bottom: 6px;
+            width: 1px;
+            background-color: var(--accent-blue);
+        }
+
+        /* 副标题文本样式：无衬线字体，响应式字号，常规粗体，行高1.6，弱化文本色，最大宽度，小字间距 */
+        p.subhead {
+            font-family: 'Manrope', sans-serif;
+            font-size: clamp(0.9rem, 1.1vw, 1.2rem); /* 响应式字号：0.9~1.2rem */
+            font-weight: 400;
+            line-height: 1.6;
+            color: var(--text-muted);
+            max-width: 320px;
+            letter-spacing: 0.01em;
+        }
+
+        /* 封面首屏：强化标题层级、上移文字重心、收窄左侧冗余留白（仅此 .chapter-cover） */
+        .chapter-cover .ui-layer main {
+            align-items: flex-start;
+            padding-top: clamp(0.25rem, 2.75vh, 2.25rem);
+        }
+
+        .chapter-cover .content-left {
+            max-width: min(52vw, 36rem);
+            padding-left: var(--space-unit);
+        }
+
+        .chapter-cover h1 {
+            font-size: clamp(4.125rem, 8.35vw, 9.375rem);
+            font-weight: 600;
+            line-height: 1.04;
+            letter-spacing: -0.022em;
+            margin-bottom: clamp(2rem, 3.75vw, 3.25rem);
+            max-width: 100%;
+            text-wrap: balance;
+        }
+
+        .chapter-cover .subhead-container {
+            padding-left: 22px;
+        }
+
+        .chapter-cover .subhead-container::before {
+            top: 7px;
+            bottom: 7px;
+        }
+
+        .chapter-cover p.subhead {
+            font-size: clamp(1.08rem, 1.82vw, 1.48rem);
+            line-height: 1.68;
+            max-width: min(26.5rem, 88vw);
+            letter-spacing: 0.022em;
+        }
+
+        /* 页脚样式：弹性布局，两端对齐，底部对齐，小字号，大写，字间距，弱化文本色 */
+        footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            font-size: 0.7rem;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+        }
+
+        /* 元数据容器：垂直弹性布局，小间距 */
+        .meta-data {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        /* 滚动指示器：弹性布局，居中对齐，间距，手型光标 */
+        .scroll-indicator {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+        }
+
+        /* 滚动指示器横线：宽度40px，高度1px，弱化文本色，相对定位（用于进度动画），溢出隐藏 */
+        .scroll-line {
+            width: 40px;
+            height: 1px;
+            background-color: var(--text-muted);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* 滚动指示器进度动画伪元素：初始左移100%，动画循环滑动 */
+        .scroll-line::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--text-main); /* 进度条颜色（主文本色） */
+            transform: translateX(-100%);       /* 初始左移隐藏 */
+            animation: scroll-progress 2s cubic-bezier(0.65, 0, 0.35, 1) infinite; /* 进度动画 */
+        }
+
+        /* 滚动指示器进度动画：左→右→左循环 */
+        @keyframes scroll-progress {
+            0% { transform: translateX(-100%); }
+            50% { transform: translateX(0); }
+            100% { transform: translateX(100%); }
+        }
+
+        /* 文字故障动画（hover时）：颜色变蓝色，位置轻微抖动 */
+        .glitch-hover:hover {
+            animation: text-glitch 0.3s cubic-bezier(.25, .46, .45, .94) both infinite;
+            color: var(--accent-blue);
+        }
+
+        /* 文字故障动画关键帧：随机轻微位移，模拟电子故障 */
+        @keyframes text-glitch {
+            0% { transform: translate(0); }
+            20% { transform: translate(-2px, 1px); }
+            40% { transform: translate(-1px, -1px); }
+            60% { transform: translate(2px, 1px); }
+            80% { transform: translate(1px, -1px); }
+            100% { transform: translate(0); }
+        }
+
+        /* 第二章（交互页面）样式：背景色，文本色，字体，相对定位，隐藏溢出 */
+        .chapter-2 {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: var(--font-main);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        /* 第三章生物粒子画布：绝对定位覆盖整个章节，层级1，滤镜（液态效果+对比度/亮度），透明度，不响应指针事件 */
+        #bio-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            filter: url('#liquid-filter') contrast(150%) brightness(100%); /* 应用SVG液态滤镜，增强对比度 */
+            opacity: 0.9;
+            pointer-events: none;
+        }
+
+        /* 噪点覆盖层：绝对定位覆盖整个章节，层级3，SVG噪点背景，混合模式叠加，不响应指针事件 */
+        .noise-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 3;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.08'/%3E%3C/svg%3E");
+            mix-blend-mode: overlay; /* 叠加模式，与底层融合 */
+        }
+
+        /* 第三章界面层：相对定位（层级2），网格布局（两行：查询区+编辑区），内边距，盒模型 */
+        .interface-layer {
+            position: relative;
+            z-index: 2;
+            width: 100%;
+            height: 100%;
+            display: grid;
+            grid-template-rows: auto 1fr; /* 第一行自适应高度，第二行占满剩余 */
+            padding: 4rem 15%;
+            box-sizing: border-box;
+        }
+
+        /* 查询容器：底部间距，相对定位 */
+        .query-container {
+            margin-bottom: 4rem;
+            position: relative;
+        }
+
+        /* 查询标签：等宽字体，小字号，大写，字间距，灰色，块级显示（独占一行），底部间距 */
+        .query-label {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: #444;
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        /* 查询输入框：宽度100%，透明背景，无边框，底部边框1px，高亮色文本，字号，轻量粗体，内边距，无轮廓，主字体，边框颜色过渡 */
+        .query-input {
+            width: 100%;
+            background: transparent;
+            border: none;
+            border-bottom: 1px solid #222;
+            color: var(--highlight-color);
+            font-size: 1.5rem;
+            font-weight: 300;
+            padding: 0.5rem 0;
+            outline: none;
+            font-family: var(--font-main);
+            transition: border-color 0.5s ease;
+        }
+
+        /* 查询输入框聚焦时：底部边框颜色变浅 */
+        .query-input:focus {
+            border-bottom: 1px solid #555;
+        }
+
+        /* 日记编辑区：相对定位，宽度100%，高度100%，字号，行高，轻量粗体，深灰色文本，保留换行/空格，无轮廓/边框，不可调整大小，透明背景，垂直滚动，隐藏滚动条 */
+        .journal-area {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            font-size: 1.5rem;
+            line-height: 1.8;
+            font-weight: 300;
+            color: #333; 
+            white-space: pre-wrap; /* 保留换行和空格 */
+            outline: none;
+            border: none;
+            resize: none; /* 禁止调整大小 */
+            background: transparent;
+            overflow-y: auto; /* 垂直滚动 */
+            scrollbar-width: none; /* 火狐隐藏滚动条 */
+        }
+        
+        /* 日记编辑区滚动条：webkit内核浏览器隐藏 */
+        .journal-area::-webkit-scrollbar {
+            display: none;
+        }
+
+        /* 单个文字样式：相对定位，文本光标，层级2 */
+        .word {
+            position: relative;
+            transition: text-shadow 0.5s ease, filter 0.5s ease;
+            cursor: text;
+            z-index: 2;
+        }
+
+        /* 文字流动效果：不依赖粒子形变，只通过文字填充渐变位移产生流动感 */
+        .word-flow {
+            color: transparent;
+            background-image: linear-gradient(
+            110deg,
+            rgba(25, 39, 57, 0.92) 0%,
+            rgba(96, 133, 176, 0.96) 34%,
+            rgba(22, 34, 49, 0.90) 100%
+            );
+            background-size: 220% 100%;
+            background-position: 0% 50%;
+            -webkit-background-clip: text;
+            background-clip: text;
+            animation: word-flow-drift 4.2s ease-in-out infinite;
+            will-change: background-position;
+        }
+
+        /* 文字激活状态（粒子靠近时）：仅增强高光，不改粒子逻辑 */
+        .word.active {
+            text-shadow: 0 0 12px rgba(255, 255, 255, 0.28);
+            filter: brightness(1.13);
+        }
+
+        /* 文字连接状态（预留）：灰色 */
+        .word.connected {
+            color: #999;
+        }
+
+        @keyframes word-flow-drift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* 光标跟随器：固定定位，宽高20px，白色半透明边框，圆形，不响应指针事件，层级100，居中（基于鼠标位置），宽高过渡，混合模式排除 */
+        #cursor-follower {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 20px;
+            height: 20px;
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 100;
+            transform: translate(-50%, -50%); /* 居中（基于自身宽高） */
+            transition: width 0.3s ease, height 0.3s ease;
+            mix-blend-mode: exclusion; /* 排除模式，与背景反色融合 */
+        }
+
+        /* 状态提示框：固定定位（右下角），等宽字体，小字号，深灰色，垂直弹性布局，右对齐，间距，不响应指针事件，层级100 */
+        .status-hud {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 0.5rem;
+            pointer-events: none;
+            z-index: 100;
+        }
+
+        /* 状态圆点：行内块级，宽高6px，深灰色，圆形，左间距，脉冲动画 */
+        .status-dot {
+            display: inline-block;
+            width: 6px;
+            height: 6px;
+            background-color: #333;
+            border-radius: 50%;
+            margin-left: 8px;
+            animation: pulse 4s infinite;
+        }
+
+        /* 状态圆点脉冲动画：透明度从0.2→1→0.2循环 */
+        @keyframes pulse {
+            0% { opacity: 0.2; }
+            50% { opacity: 1; }
+            100% { opacity: 0.2; }
+        }
+
+        /* 响应式适配（屏幕宽度≤1024px） */
+        @media (max-width: 1024px) {
+            /* 主体内容区改为单列布局 */
+            main {
+                grid-template-columns: 1fr;
+            }
+            /* 左侧内容容器：最大宽度80vw，无左内边距，顶部外边距 */
+            .content-left {
+                max-width: 80vw;
+                padding-left: 0;
+                margin-top: 10vh;
+            }
+            /* 几何装饰元素：更大尺寸，位置下移/右移 */
+            .geometric-intervention {
+                width: 50vw;
+                height: 40vh;
+                top: 60%;
+                left: 60%;
+            }
+            /* 交互页界面层：内边距减小 */
+            .interface-layer {
+                padding: 2rem 8%;
+            }
+            /* 日记编辑区：字号减小 */
+            .journal-area {
+                font-size: 1.2rem;
+            }
+
+            /* 封面：小屏仍以更大标题为主，上移、减少悬空留白 */
+            .chapter-cover .ui-layer main {
+                padding-top: 0;
+            }
+            .chapter-cover .content-left {
+                max-width: min(86vw, 32rem);
+                padding-left: 0;
+                margin-top: clamp(2vh, 5vh, 7vh);
+            }
+            .chapter-cover h1 {
+                font-size: clamp(3.125rem, 10.75vw, 5.875rem);
+                line-height: 1.06;
+                max-width: 100%;
+            }
+            .chapter-cover p.subhead {
+                font-size: clamp(0.98rem, 3.65vw, 1.26rem);
+            }
+        }
+
+        /* 第三页：珊瑚礁纬度分布图 */
+        .chapter-3 {
+            background-color: #F2F2F2;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .chapter-3 .chapter3-chart-container {
+            width: 100%;
+            max-width: 900px;
+            background-color: #F2F2F2;
+            padding: 30px;
+            border-radius: 12px;
+        }
+
+        .chapter-3 .chapter3-title {
+            text-align: center;
+            font-weight: 300;
+            color: #333;
+            margin-bottom: 24px;
+        }
+
+        .chapter-3 .chapter3-chart-wrap {
+            width: 100%;
+            height: min(48vh, 420px);
+            position: relative;
+        }
+
+        .chapter-3 .chapter3-description {
+            text-align: left;
+            margin-top: 32px;
+            font-size: 15px;
+            font-weight: 300;
+            color: #555;
+            line-height: 1.8;
+            max-width: 720px;
+            letter-spacing: 0.3px;
+        }
+
+        @media (max-width: 768px) {
+            .chapter-3 .chapter3-chart-container {
+                padding: 20px;
+            }
+
+            .chapter-3 .chapter3-chart-wrap {
+                height: min(42vh, 320px);
+            }
+        }
+
+        .page-scroll-progress {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            z-index: 10050;
+            pointer-events: none;
+            background: transparent;
+        }
+        .page-scroll-progress__fill {
+            height: 100%;
+            width: 100%;
+            transform-origin: left center;
+            transform: scaleX(0);
+            background: #1A4B8C;
+            transition: transform 0.18s ease-out;
+            will-change: transform;
+        }
+    </style>
+</head>
+<body>
+    <div id="page-scroll-progress" class="page-scroll-progress" aria-hidden="true">
+        <div class="page-scroll-progress__fill"></div>
+    </div>
+    <!-- 展签顶栏：从第二屏起显示（由 body.past-cover 控制） -->
+    <nav id="global-thesis-nav" class="global-thesis-nav" aria-hidden="true">
+        <div class="global-thesis-logo">CORAL REEF · THESIS</div>
+        <div class="global-thesis-meta">
+            <span>Exhibition</span>
+            <span>Data Art</span>
+            <span>2026</span>
+        </div>
+    </nav>
+
+    <!-- 封面章节（第一屏）：包含几何装饰、Three.js粒子画布、UI层（头部/主体/底部） -->
+    <div class="chapter chapter-cover">
+        <div class="geometric-intervention"></div>
+        <div id="canvas-container"></div>
+
+        <div class="ui-layer">
+            <header>
+                <div class="logo">CORAL REEF.</div>
+                <div class="nav-links">
+                    <span class="nav-link">Thesis</span>
+                    <span class="nav-link">Exhibition</span>
+                    <span class="nav-link glitch-hover">Enter</span>
+                </div>
+            </header>
+
+            <main>
+                <div class="content-left" id="parallax-content">
+                    <h1>The Ocean's<br>Heartbeat</h1>
+                    <div class="subhead-container">
+                        <p class="subhead">How coral reefs build ecosystems and nurture marine life</p>
+                    </div>
+                </div>
+            </main>
+
+            <footer>
+                <div class="meta-data">
+                    <span>2026 Thesis Project</span>
+                    <span>Interactive Media Design</span>
+                </div>
+                <div class="scroll-indicator" id="scroll-down">
+                    <span>Scroll</span>
+                    <div class="scroll-line"></div>
+                </div>
+            </footer>
+        </div>
+    </div>
+
+    <!-- 第二章（第二屏）- 尝试页面内容：包含SVG液态滤镜、噪点层、生物粒子画布、界面层（查询框+编辑区）、状态提示、光标跟随器 -->
+    <div class="chapter chapter-2" id="chapter-2">
+        <!-- SVG滤镜定义：液态效果（模糊+颜色矩阵+湍流位移） -->
+        <svg style="position: absolute; width: 0; height: 0;">
+            <defs>
+                <filter id="liquid-filter">
+                    <!-- 高斯模糊：模糊半径12，结果命名为blur -->
+                    <feGaussianBlur in="SourceGraphic" stdDeviation="12" result="blur"></feGaussianBlur>
+                    <!-- 颜色矩阵：增强对比度，结果命名为goo -->
+                    <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 19 -9" result="goo"></feColorMatrix>
+                    <!-- 湍流噪声：分形噪声，频率0.01，八度3，结果命名为noise -->
+                    <feTurbulence type="fractalNoise" baseFrequency="0.01" numOctaves="3" result="noise"></feTurbulence>
+                    <!-- 位移映射：用noise扰动goo，缩放20，X/Y通道分别用R/G，模拟液态流动 -->
+                    <feDisplacementMap in="goo" in2="noise" scale="20" xChannelSelector="R" yChannelSelector="G"></feDisplacementMap>
+                    <!-- 复合：将原图形叠加到位移后的图形上 -->
+                    <feComposite in="SourceGraphic" operator="atop"></feComposite>
+                </filter>
+            </defs>
+        </svg>
+
+        <div class="noise-overlay"></div>
+        <canvas id="bio-layer"></canvas>
+
+        <div class="interface-layer">
+            <div class="query-container">
+                <span class="query-label">Active Organism // Query</span>
+                <input type="text" class="query-input" value="The Living Reef: A Story of Color and Loss" placeholder="Enter a theme to explore...">
+            </div>
+
+            <!-- 日记编辑区：可编辑，关闭拼写检查 -->
+            <div class="journal-area" id="editor" contenteditable="true" spellcheck="false">
+Coral reefs are the ocean’s most vibrant living systems. Covering merely 0.1% of the seabed, they nurture over 25% of all marine species. They build homes, supply food, and shield coastlines, serving as the very pulse and foundation of the entire ocean.
+
+It feels like the ocean’s own heartbeat, steady and bright. Branching out, thriving, sustaining life across the blue.
+
+Yesterday, a shift began in these fragile waters. A gap between life and survival. The coral doesn’t just fade; it bleaches, losing the symbiosis that gave it color. If we could map this decline, would we see the warning signs we missed? Or would it reveal a geometry of loss we were too slow to see?
+
+We speak of "saving reefs" as if it is a distant goal, but perhaps hope is just the friction of action. The residue of the search for a cooler, bluer future.
+
+I am trying to listen. To let the reef’s story be heard.
+            </div>
+        </div>
+
+
+
+        <!-- 光标跟随器：跟随鼠标移动的圆形指示器 -->
+        <div id="cursor-follower"></div>
+    </div>
+
+    <!-- 第三页：珊瑚礁纬度分布图 -->
+    <div class="chapter chapter-3" id="chapter-3">
+        <div class="chapter3-chart-container">
+            <h2 class="chapter3-title">Coral Reef Distribution by Latitude</h2>
+            <div class="chapter3-chart-wrap">
+                <canvas id="coralChart"></canvas>
+            </div>
+            <p class="chapter3-description">
+                So where are the world’s coral reefs located?<br>
+                Most are found in warm oceans between 30° north and south of the equator, concentrated in gentle currents on either side of the equator — like shards of blue jade polished repeatedly by the tides.<br>
+                Every single mark on the map corresponds to a breathing forest beneath the sea.
+            </p>
+        </div>
+    </div>
+
+    <!-- Three.js r145（与 Coral Breath 内嵌场景共用全局 THREE）+ OrbitControls -->
+    <script src="https://unpkg.com/three@0.145.0/build/three.min.js"></script>
+    <script src="https://unpkg.com/three@0.145.0/examples/js/controls/OrbitControls.js"></script>
+    <script>
+        // ===================== 第一屏 Three.js 粒子效果 =====================
+        // 获取画布容器DOM元素
+        const container = document.getElementById('canvas-container');
+        // 创建Three.js场景：所有3D元素的容器
+        const scene = new THREE.Scene();
+        // 设置场景雾化：距离越远越模糊，颜色匹配背景，密度0.025
+        scene.fog = new THREE.FogExp2(0xf2f2f2, 0.025);
+
+        // 创建透视相机：视角45度，宽高比为窗口比例，近裁剪面0.1，远裁剪面1000
+        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.z = 25;  // 相机Z轴位置（距离场景中心）
+        camera.position.x = 5;   // 相机X轴偏移（轻微右移）
+
+        // 创建WebGL渲染器：开启抗锯齿，透明背景
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setSize(window.innerWidth, window.innerHeight); // 设置渲染器尺寸为窗口大小
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // 设置像素比（最大2，避免高清屏性能问题）
+        container.appendChild(renderer.domElement); // 将渲染器画布添加到容器
+
+        // 噪声着色器函数：Perlin噪声，用于粒子的随机波动效果
+        const noiseShader = `
+            vec3 mod289(vec3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
+            vec4 mod289(vec4 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
+            vec4 permute(vec4 x) { return mod289(((x*34.0)+1.0)*x); }
+            vec4 taylorInvSqrt(vec4 r) { return 1.79284291400159 - 0.85373472095314 * r; }
+            float snoise(vec3 v) {
+                const vec2 C = vec2(1.0/6.0, 1.0/3.0);
+                const vec4 D = vec4(0.0, 0.5, 1.0, 2.0);
+                vec3 i = floor(v + dot(v, C.yyy));
+                vec3 x0 = v - i + dot(i, C.xxx);
+                vec3 g = step(x0.yzx, x0.xyz);
+                vec3 l = 1.0 - g;
+                vec3 i1 = min(g.xyz, l.zxy);
+                vec3 i2 = max(g.xyz, l.zxy);
+                vec3 x1 = x0 - i1 + C.xxx;
+                vec3 x2 = x0 - i2 + C.yyy;
+                vec3 x3 = x0 - D.yyy;
+                i = mod289(i);
+                vec4 p = permute(permute(permute(
+                        i.z + vec4(0.0, i1.z, i2.z, 1.0))
+                    + i.y + vec4(0.0, i1.y, i2.y, 1.0))
+                    + i.x + vec4(0.0, i1.x, i2.x, 1.0));
+                float n_ = 0.142857142857;
+                vec3 ns = n_ * D.wyz - D.xzx;
+                vec4 j = p - 49.0 * floor(p * ns.z * ns.z);
+                vec4 x_ = floor(j * ns.z);
+                vec4 y_ = floor(j - 7.0 * x_);
+                vec4 x = x_ * ns.x + ns.yyyy;
+                vec4 y = y_ * ns.x + ns.yyyy;
+                vec4 h = 1.0 - abs(x) - abs(y);
+                vec4 b0 = vec4(x.xy, y.xy);
+                vec4 b1 = vec4(x.zw, y.zw);
+                vec4 s0 = floor(b0) * 2.0 + 1.0;
+                vec4 s1 = floor(b1) * 2.0 + 1.0;
+                vec4 sh = -step(h, vec4(0.0));
+                vec4 a0 = b0.xzyw + s0.xzyw * sh.xxyy;
+                vec4 a1 = b1.xzyw + s1.xzyw * sh.zzww;
+                vec3 p0 = vec3(a0.xy, h.x);
+                vec3 p1 = vec3(a0.zw, h.y);
+                vec3 p2 = vec3(a1.xy, h.z);
+                vec3 p3 = vec3(a1.zw, h.w);
+                vec4 norm = taylorInvSqrt(vec4(dot(p0,p0), dot(p1,p1), dot(p2,p2), dot(p3,p3)));
+                p0 *= norm.x;
+                p1 *= norm.y;
+                p2 *= norm.z;
+                p3 *= norm.w;
+                vec4 m = max(0.6 - vec4(dot(x0,x0), dot(x1,x1), dot(x2,x2), dot(x3,x3)), 0.0);
+                m = m * m;
+                return 42.0 * dot(m*m, vec4(dot(p0,x0), dot(p1,x1), dot(p2,x2), dot(p3,x3)));
+            }
+        `;
+
+        // 顶点着色器：控制粒子的位置和大小，添加噪声波动
+        const vertexShader = `
+            ${noiseShader}  // 引入噪声函数
+            uniform float uTime; // 全局时间变量（从JS传入）
+            varying float vNoise; // 传递给片元着色器的噪声值
+            void main() {
+                // 计算噪声值：基于粒子位置和时间，缩放0.2（减缓波动）
+                float noise = snoise(vec3(position.x * 0.2, position.y * 0.2, position.z * 0.2 + uTime * 0.1));
+                vNoise = noise; // 传递噪声值
+                // 粒子位置偏移：基于法线和噪声值，偏移量2.0
+                vec3 newPosition = position + normal * (noise * 2.0);
+                // 模型视图矩阵：将粒子位置转换为相机视角
+                vec4 mvPosition = modelViewMatrix * vec4(newPosition, 1.0);
+                // 粒子大小：距离相机越远越小，噪声影响大小（12*(1+noise)）
+                gl_PointSize = (10.0* (1.0 + noise)) * (10.0 / -mvPosition.z);
+                // 最终投影位置：转换为屏幕坐标
+                gl_Position = projectionMatrix * mvPosition;
+            }
+        `;
+
+        // 片元着色器：控制粒子的颜色和透明度
+        const fragmentShader = `
+            varying float vNoise; // 从顶点着色器接收的噪声值
+            void main() {
+                // 粒子中心坐标（-0.5~0.5）
+                vec2 xy = gl_PointCoord.xy - vec2(0.5);
+                float ll = length(xy); // 距离中心的长度
+                if (ll > 0.5) discard; // 超出圆形范围则丢弃（只渲染圆形）
+                // 粒子颜色：主色（白色）和阴影色（浅灰蓝）
+                vec3 colorMain = vec3(1.0, 1.0, 1.0);
+                vec3 colorShadow = vec3(0.8, 0.85, 0.9);
+                // 混合颜色：基于噪声值（-0.5~0.5），噪声越大越接近主色
+                vec3 finalColor = mix(colorShadow, colorMain, vNoise + 0.5);
+                // 透明度：距离中心越远越透明（0~1）
+                float alpha = (0.5 - ll) * 2.0;
+                // 透明度叠加：噪声值越高越不透明（smoothstep平滑过渡）
+                alpha *= smoothstep(-1.0, 0.5, vNoise);
+                // 最终颜色：混合色 + 透明度（0.8整体透明度）
+                gl_FragColor = vec4(finalColor, alpha * 0.8);
+            }
+        `;
+
+        // 创建环面结几何体：半径4，管半径1.5，分段数300/64（平滑）
+        const geometry = new THREE.TorusKnotGeometry(2.8, 1.0, 300, 64);
+        geometry.scale(1, 1.4, 0.8); // 缩放几何体：Y轴拉伸1.4倍，Z轴压缩0.8倍
+
+        // 创建着色器材质：使用自定义顶点/片元着色器，传入时间变量，透明，关闭深度写入，普通混合模式
+        const material = new THREE.ShaderMaterial({
+            vertexShader,
+            fragmentShader,
+            uniforms: { uTime: { value: 0.0 } },
+            transparent: true,
+            depthWrite: false,
+            blending: THREE.NormalBlending
+        });
+
+        // 创建点云：将几何体和材质结合，渲染为粒子
+        const pointCloud = new THREE.Points(geometry, material);
+        pointCloud.position.set(9, 0, 0); // 点云位置偏移（X轴+2）
+        scene.add(pointCloud); // 添加到场景
+
+        // 创建碎片几何体：1000个随机位置的点
+        const debrisGeometry = new THREE.BufferGeometry();
+        const debrisCount = 1000; // 碎片数量
+        const debrisPositions = new Float32Array(debrisCount * 3); // 每个点3个坐标（x,y,z）
+        // 随机生成碎片位置（-15~15范围）
+        for (let i = 0; i < debrisCount * 3; i++) {
+            debrisPositions[i] = (Math.random() - 0.5) * 30;
+        }
+        // 设置几何体位置属性
+        debrisGeometry.setAttribute('position', new THREE.BufferAttribute(debrisPositions, 3));
+
+        // 创建碎片材质：白色，大小0.05，透明，透明度0.4
+        const debrisMaterial = new THREE.PointsMaterial({
+            color: 0xffffff,
+            size: 0.05,
+            transparent: true,
+            opacity: 0.4
+        });
+        // 创建碎片点云并添加到场景
+        const debris = new THREE.Points(debrisGeometry, debrisMaterial);
+        scene.add(debris);
+
+        // 鼠标/动画变量：存储鼠标位置、目标位置、窗口半宽/半高
+        let mouseX = 0;
+        let mouseY = 0;
+        let targetX = 0;
+        let targetY = 0;
+        let windowHalfX = window.innerWidth / 2;
+        let windowHalfY = window.innerHeight / 2;
+
+        // 鼠标移动事件：更新鼠标位置（归一化到-0.5~0.5）
+        document.addEventListener('mousemove', (event) => {
+            mouseX = (event.clientX - windowHalfX) * 0.001;
+            mouseY = (event.clientY - windowHalfY) * 0.001;
+        });
+
+        // 创建时钟：用于计算流逝时间
+        const clock = new THREE.Clock();
+        // 获取视差内容DOM元素（第一屏标题）
+        const parallaxContent = document.getElementById('parallax-content');
+
+        // Three.js动画循环函数
+        function animateThreeJS() {
+            requestAnimationFrame(animateThreeJS); // 递归调用，保持动画
+            const elapsedTime = clock.getElapsedTime(); // 获取流逝时间（秒）
+            material.uniforms.uTime.value = elapsedTime * 0.5; // 更新着色器时间变量（减缓速度）
+
+            // 缓动更新目标旋转：鼠标位置影响旋转，0.05为缓动系数（越接近0越慢）
+            targetX = mouseX * 0.5;
+            targetY = mouseY * 0.5;
+            pointCloud.rotation.y += 0.05 * (targetX - pointCloud.rotation.y); // Y轴旋转（左右鼠标）
+            pointCloud.rotation.x += 0.05 * (targetY - pointCloud.rotation.x); // X轴旋转（上下鼠标）
+            pointCloud.rotation.y += 0.001; // 自动缓慢旋转（Y轴）
+            debris.rotation.y -= 0.0005;    // 碎片反向缓慢旋转（Y轴）
+            debris.rotation.x -= 0.0002;    // 碎片反向缓慢旋转（X轴）
+
+            // 只有封面可见时才执行视差效果：滚动距离小于窗口高度
+            const scrollTop = window.scrollY;
+            if (scrollTop < window.innerHeight) {
+                const textMoveX = mouseX * -20; // 文本X轴视差（反向，系数20）
+                const textMoveY = mouseY * -20; // 文本Y轴视差（反向，系数20）
+                parallaxContent.style.transform = `translate3d(${textMoveX}px, ${textMoveY}px, 0)`; // 应用视差
+            }
+
+            renderer.render(scene, camera); // 渲染场景（相机视角）
+        }
+
+        // 启动Three.js动画
+        animateThreeJS();
+
+        // 窗口大小调整事件：更新相机宽高比、渲染器尺寸、窗口半宽/半高，同时触发第三章resize
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix(); // 更新相机投影矩阵
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            windowHalfX = window.innerWidth / 2;
+            windowHalfY = window.innerHeight / 2;
+            
+            // 同时触发第三章的resize（如果函数存在）
+            if (typeof resizeBioLayer === 'function') {
+                resizeBioLayer(); // 设置画布尺寸
+            }
+        });
+
+        // ===================== 滚动控制 =====================
+        // 滚动指示器点击：平滑滚动到交互章节（第二屏，即一个视口高度）
+        document.getElementById('scroll-down').addEventListener('click', () => {
+            window.scrollTo({
+                top: window.innerHeight,
+                behavior: 'smooth'
+            });
+        });
+
+        // ===================== 第二章 生物粒子效果 =====================
+        // 获取第三章画布、编辑区、光标跟随器DOM元素
+        const canvas = document.getElementById('bio-layer');
+        const ctx = canvas.getContext('2d'); // 获取2D绘图上下文
+        const editor = document.getElementById('editor');
+        const cursorFollower = document.getElementById('cursor-follower');
+        
+        // 画布尺寸、鼠标位置、粒子数组、文字坐标数组
+        let width, height;
+        let mouse = { x: -1000, y: -1000 }; // 初始鼠标位置（屏幕外）
+        let particles = [];                // 存储所有粒子对象
+        let wordCoordinates = [];          // 存储每个文字的坐标和元素
+
+        // 粒子系统配置：可调整参数
+        const config = {
+            particleCount: 50,             // 粒子数量
+            baseRadius: 15,                // 粒子基础半径
+            viscosity: 0.08,               // 粘性（预留，未使用）
+            wanderStrength: 0.5,           // 随机游走强度
+            connectionDist: 150,           // 粒子连线距离阈值
+            repelDist: 50,                 // 粒子排斥距离阈值（预留，未使用）
+            textAttractionRadius: 200      // 文字吸引粒子的半径
+        };
+
+        // 第三章resize函数：更新画布尺寸，重新扫描文字坐标
+        function resizeBioLayer() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;  // 设置画布宽度（像素）
+            canvas.height = height; // 设置画布高度（像素）
+            scanText(); // 重新扫描文字坐标
+        }
+
+        // 扫描编辑区文字：将文字拆分为单个span，记录坐标
+        function scanText() {
+            // 如果已处理过，只更新坐标，不重新拆分
+            if (editor.dataset.processed === "true") {
+                updateWordCoords(); // 更新文字坐标
+                return;
+            }
+
+            // 获取编辑区文本，按空格/换行拆分（保留空白字符）
+            const text = editor.innerText;
+            const words = text.split(/(\s+)/); 
+            editor.innerHTML = ''; // 清空编辑区
+            // 遍历拆分后的文字，创建span包裹
+            words.forEach(word => {
+                const span = document.createElement('span');
+                span.textContent = word; // 设置文本
+                if (word.trim().length > 0) { // 非空白字符添加word类
+                    span.className = 'word word-flow';
+                }
+                editor.appendChild(span); // 添加到编辑区
+            });
+            editor.dataset.processed = "true"; // 标记为已处理
+            updateWordCoords(); // 更新文字坐标
+        }
+
+        // 更新文字坐标：遍历所有word span，获取其位置和尺寸
+        function updateWordCoords() {
+            wordCoordinates = []; // 清空数组
+            const spans = document.querySelectorAll('.word'); // 获取所有word span
+            spans.forEach(span => {
+                const rect = span.getBoundingClientRect(); // 获取元素相对于视口的位置
+                wordCoordinates.push({
+                    x: rect.left + rect.width / 2, // 文字中心X坐标
+                    y: rect.top + rect.height / 2,  // 文字中心Y坐标
+                    w: rect.width,                  // 文字宽度
+                    element: span,                  // 对应DOM元素
+                    active: false                   // 是否激活（粒子靠近）
+                });
+            });
+        }
+
+        // 粒子类：定义粒子的属性和方法
+        class Particle {
+            // 构造函数：初始化粒子位置
+            constructor(x, y) {
+                this.x = x;                // 当前X坐标
+                this.y = y;                // 当前Y坐标
+                this.vx = (Math.random() - 0.5) * 2; // 初始X速度（-1~1）
+                this.vy = (Math.random() - 0.5) * 2; // 初始Y速度（-1~1）
+                this.radius = config.baseRadius * (0.8 + Math.random() * 0.5); // 粒子半径（0.8~1.3倍基础半径）
+                this.targetX = x;          // 目标X坐标（预留，未使用）
+                this.targetY = y;          // 目标Y坐标（预留，未使用）
+                this.angle = Math.random() * Math.PI * 2; // 随机初始角度（0~2π）
+            }
+
+            // 更新粒子位置和速度
+            update() {
+                // 随机游走：角度轻微变化，速度叠加余弦/正弦值（基于角度）
+                this.angle += (Math.random() - 0.5) * 0.2;
+                this.vx += Math.cos(this.angle) * config.wanderStrength;
+                this.vy += Math.sin(this.angle) * config.wanderStrength;
+
+                // 速度衰减：乘以0.95，逐渐减速
+                this.vx *= 0.95;
+                this.vy *= 0.95;
+
+                // 鼠标吸引：粒子向鼠标位置移动（距离<400时）
+                const dx = mouse.x - this.x;
+                const dy = mouse.y - this.y;
+                const dist = Math.sqrt(dx * dx + dy * dy); // 粒子到鼠标的距离
+
+                if (dist < 400) {
+                    this.vx += dx * 0.002; // X速度叠加（系数0.002，越近越快）
+                    this.vy += dy * 0.002; // Y速度叠加
+                }
+
+                // 寻找最近的文字：计算粒子到每个文字的距离，记录最近的
+                let closestDist = Infinity;
+                let closestWord = null;
+
+                wordCoordinates.forEach(word => {
+                    const wdx = word.x - this.x;
+                    const wdy = word.y - this.y;
+                    const wDist = Math.sqrt(wdx * wdx + wdy * wdy); // 粒子到文字的距离
+                    
+                    if (wDist < closestDist) {
+                        closestDist = wDist;
+                        closestWord = word;
+                    }
+                });
+
+                // 文字吸引：如果最近文字在吸引半径内，粒子向文字移动
+                if (closestWord && closestDist < config.textAttractionRadius) {
+                    const wdx = closestWord.x - this.x;
+                    const wdy = closestWord.y - this.y;
+                    this.vx += wdx * 0.01; // X速度叠加（系数0.01，比鼠标更强）
+                    this.vy += wdy * 0.01; // Y速度叠加
+                    
+                    // 粒子距离文字<30时，激活文字（添加active类）
+                    if (closestDist < 30) {
+                        if (!closestWord.active) {
+                            closestWord.element.classList.add('active');
+                            closestWord.active = true;
+                        }
+                    } else if (closestDist > 60) { // 距离>60时，取消激活
+                        if (closestWord.active) {
+                            closestWord.element.classList.remove('active');
+                            closestWord.active = false;
+                        }
+                    }
+                }
+
+                // 更新粒子位置：速度叠加到坐标
+                this.x += this.vx;
+                this.y += this.vy;
+
+                // 边界循环：粒子超出画布后从对面进入
+                if (this.x < 0) this.x = width;
+                if (this.x > width) this.x = 0;
+                if (this.y < 0) this.y = height;
+                if (this.y > height) this.y = 0;
+            }
+
+            // 绘制粒子：圆形，浅蓝底色，透明度0.9
+            draw() {
+                ctx.beginPath(); // 开始路径
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2); // 绘制圆形（中心坐标、半径、角度0~2π）
+                ctx.fillStyle = 'rgba(138,170,220, 0.9)'; // 粒子填充色（浅蓝，透明度0.9）
+                ctx.fill(); // 填充路径
+            }
+        }
+
+        // 初始化第三章生物粒子：设置画布尺寸，创建粒子，扫描文字
+        function initBioLayer() {
+            resizeBioLayer(); // 设置画布尺寸
+            
+            // 创建指定数量的粒子，初始位置在画布中心附近（±100）
+            for (let i = 0; i < config.particleCount; i++) {
+                particles.push(new Particle(width/2 + (Math.random()-0.5)*100, height/2 + (Math.random()-0.5)*100));
+            }
+            scanText(); // 扫描文字
+        }
+
+        // 第三章动画循环：绘制粒子和连线
+        function animateBioLayer() {
+            ctx.clearRect(0, 0, width, height); // 清空画布
+
+            // 细胞连线的样式（颜色、宽度）：浅蓝透明（rgba(217,231,247, 0.15)），线宽4px
+            ctx.strokeStyle = 'rgba(217,231,247, 0.15)';
+            ctx.lineWidth = 4; 
+
+            // 遍历所有粒子，更新位置，绘制粒子，绘制粒子间连线
+            for (let i = 0; i < particles.length; i++) {
+                let p1 = particles[i];
+                p1.update(); // 更新粒子位置
+                p1.draw();   // 绘制粒子
+
+                // 遍历后续粒子，绘制连线（避免重复）
+                for (let j = i + 1; j < particles.length; j++) {
+                    let p2 = particles[j];
+                    const dx = p1.x - p2.x;
+                    const dy = p1.y - p2.y;
+                    const dist = Math.sqrt(dx*dx + dy*dy); // 粒子间距离
+
+                    // 距离小于连线阈值时，绘制连线
+                    if (dist < config.connectionDist) {
+                        ctx.beginPath(); // 开始路径
+                        ctx.moveTo(p1.x, p1.y); // 起点（p1位置）
+                        ctx.lineTo(p2.x, p2.y); // 终点（p2位置）
+                        ctx.stroke(); // 绘制线条
+                    }
+                }
+            }
+
+            requestAnimationFrame(animateBioLayer); // 递归调用，保持动画
+        }
+
+        // 第三章鼠标事件：更新鼠标位置，更新光标跟随器位置
+        window.addEventListener('mousemove', e => {
+            mouse.x = e.clientX;
+            mouse.y = e.clientY;
+            // 光标跟随器位置：基于鼠标坐标，居中（translate(-50%,-50%)在CSS中已设置，这里直接赋值）
+            cursorFollower.style.transform = `translate(${e.clientX}px, ${e.clientY}px)`;
+        });
+
+        // 查询输入框输入事件：粒子速度随机变化（模拟交互反馈）
+        document.querySelector('.query-input').addEventListener('input', () => {
+            particles.forEach(p => {
+                p.vx += (Math.random() - 0.5) * 5; // X速度随机增减（-2.5~2.5）
+                p.vy += (Math.random() - 0.5) * 5; // Y速度随机增减
+            });
+        });
+
+        // 编辑区输入事件：标记为未处理，重新扫描文字
+        editor.addEventListener('input', () => {
+            editor.dataset.processed = "false";
+            scanText();
+        });
+
+        // 初始化第三章：启动粒子系统和动画
+        initBioLayer();
+        animateBioLayer();
+        // 延迟100ms再次扫描文字（确保DOM渲染完成）
+        setTimeout(scanText, 100);
+
+        // ===================== 第三页 纬度分布图 =====================
+        function initCoralChart() {
+            const coralCanvas = document.getElementById('coralChart');
+            if (!coralCanvas || typeof Chart === 'undefined') return;
+
+            const coralChart = new Chart(coralCanvas, {
+                type: 'bar',
+                data: {
+                    labels: [
+                        '30°N - 20°N',
+                        '20°N - 10°N',
+                        '10°N - 0°',
+                        'Equator',
+                        '0° - 10°S',
+                        '10°S - 20°S',
+                        '20°S - 30°S'
+                    ],
+                    datasets: [{
+                        label: 'Number of Coral Reefs',
+                        data: [1200, 2500, 3000, 3200, 3500, 3800, 1800],
+                        backgroundColor: '#1A4D8F',
+                        borderWidth: 0,
+                        borderRadius: 4,
+                        barPercentage: 0.6,
+                        hoverBackgroundColor: '#2A5D9F',
+                        hoverBorderWidth: 0
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            enabled: true,
+                            mode: 'index',
+                            intersect: false,
+                            callbacks: {
+                                label: function (context) {
+                                    return `Coral reefs: ${context.raw}`;
+                                },
+                                title: function (context) {
+                                    return `Latitude band: ${context[0].label}`;
+                                }
+                            },
+                            backgroundColor: '#222',
+                            titleFont: { size: 13, weight: 'normal' },
+                            bodyFont: { size: 12, weight: 'normal' },
+                            padding: 10,
+                            cornerRadius: 6
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { color: 'rgba(0,0,0,0.05)' },
+                            ticks: { font: { weight: 300 } }
+                        },
+                        y: {
+                            grid: { display: false },
+                            ticks: { font: { weight: 300 } }
+                        }
+                    },
+                    animation: {
+                        duration: 1200,
+                        easing: 'easeOutQuart'
+                    },
+                    interaction: {
+                        mode: 'nearest',
+                        axis: 'y',
+                        intersect: false
+                    }
+                }
+            });
+            return coralChart;
+        }
+        document.addEventListener('DOMContentLoaded', initCoralChart);
+    </script>
+    <!-- 追加页面（隔离作用域，不影响原页面） -->
+    <div id="append-root">
+        <style>
+            /* 第四页起：与封面统一的浅灰底、深字、大留白、左栏信息布局 */
+            #append-root {
+                position: relative;
+                z-index: 1;
+                width: 100%;
+                background: #f2f2f2;
+                color: #141414;
+                overflow: hidden;
+                font-family: 'Manrope', sans-serif;
+                --append-surface: #f2f2f2;
+                --append-accent: #0a3a8a;
+                --append-muted: #4a4a4a;
+                --append-whisper: #6e6e6e;
+                --append-line: rgba(20, 20, 20, 0.08);
+                --append-card-border: rgba(20, 20, 20, 0.09);
+                --append-card-shadow: 0 2px 12px rgba(0, 0, 0, 0.045);
+            }
+            #append-root * { box-sizing: border-box; }
+            #append-root .append-bg-wrap {
+                position: absolute;
+                inset: 0;
+                z-index: 0;
+                pointer-events: none;
+            }
+            #append-root #append-bg-canvas {
+                position: absolute;
+                inset: 0;
+                width: 100%;
+                height: 100%;
+                opacity: 0.18;
+            }
+            #append-root .append-grain {
+                position: absolute;
+                inset: 0;
+                opacity: 0.22;
+                background-image: radial-gradient(rgba(0,0,0,.06) 0.5px, transparent 0.5px);
+                background-size: 3px 3px;
+                mix-blend-mode: multiply;
+            }
+            /* 顶栏改由页面级 .global-thesis-nav 统一承载，此处隐藏避免重复 */
+            #append-root .append-nav {
+                display: none;
+            }
+            #append-root .append-logo {
+                font-family: "Cormorant Garamond", serif;
+                font-size: 1.45rem;
+                letter-spacing: 0.08em;
+            }
+            #append-root .append-nav-right {
+                display: flex;
+                gap: 1.4rem;
+                font-size: 0.72rem;
+                letter-spacing: 0.12em;
+                text-transform: uppercase;
+            }
+            #append-root .append-main {
+                position: relative;
+                z-index: 5;
+            }
+            /* 单页：100vh 含内边距（border-box）+ 对称上下 padding，网格垂直居中；对齐顶栏 scroll-margin */
+            #append-root .append-panel {
+                box-sizing: border-box;
+                min-height: 100vh;
+                min-height: 100dvh;
+                height: 100vh;
+                height: 100dvh;
+                width: 100%;
+                max-width: min(1180px, 94vw);
+                margin: 0 auto;
+                padding-block: clamp(4rem, 7vh, 5.75rem);
+                padding-inline: max(3vw, 20px);
+                position: relative;
+                display: grid;
+                grid-template-columns: minmax(240px, 1fr) minmax(0, 2fr);
+                column-gap: clamp(2.25rem, 6vw, 4.5rem);
+                row-gap: clamp(1rem, 2vh, 1.5rem);
+                align-content: safe center;
+                justify-items: stretch;
+                align-items: start;
+                background: var(--append-surface);
+                color: #141414;
+                border-bottom: 1px solid var(--append-line);
+                scroll-snap-align: start;
+                scroll-snap-stop: always;
+                scroll-margin-top: 3.5rem;
+                overflow-x: clip;
+                overflow-y: visible;
+            }
+            #append-root .append-panel::before { display: none; }
+            /* 保留类名方便维护，视觉统一为浅底（不再使用深蓝/黄渐变幕布） */
+            #append-root .append-theme-blue,
+            #append-root .append-theme-light,
+            #append-root .append-theme-yellow,
+            #append-root .append-theme-warm {
+                background: var(--append-surface);
+                color: #141414;
+            }
+            #append-root .append-headline {
+                grid-column: 1;
+                grid-row: 1 / -1;
+                width: 100%;
+                max-width: 100%;
+                margin-bottom: 0;
+                padding-left: calc(max(2vw, 22px) + 6px);
+                border-left: 2px solid var(--append-accent);
+                display: flex;
+                flex-direction: column;
+                gap: 0.15em;
+                align-self: center;
+            }
+            #append-root .append-headline h2 { order: 0; }
+            #append-root .append-subtitle { order: 1; }
+            #append-root .append-poetry { order: 2; }
+            #append-root h2:not(.tw-ignore-append-h2) {
+                font-family: "Cormorant Garamond", serif;
+                font-weight: 500;
+                letter-spacing: -0.028em;
+                line-height: 1.04;
+                font-size: clamp(2.35rem, 4.6vw, 4.1rem);
+                margin-bottom: 0.35rem;
+                color: #080808;
+                text-shadow: none;
+                font-feature-settings: "kern" 1, "liga" 1;
+            }
+            #append-root .append-subtitle {
+                font-size: clamp(0.9rem, 1.12vw, 1.08rem);
+                line-height: 1.72;
+                max-width: 44ch;
+                color: var(--append-muted);
+                margin-bottom: clamp(0.35rem, 1vh, 0.6rem);
+                font-weight: 400;
+                letter-spacing: 0.015em;
+            }
+            #append-root .append-poetry {
+                font-family: "Cormorant Garamond", serif;
+                font-style: italic;
+                font-weight: 300;
+                font-size: clamp(0.86rem, 1.1vw, 1.02rem);
+                line-height: 1.78;
+                letter-spacing: 0.04em;
+                max-width: 46ch;
+                color: var(--append-whisper);
+                margin-bottom: 0;
+            }
+            #append-root .append-decor-line {
+                display: none;
+            }
+            #append-root .append-viz-wrap {
+                grid-column: 2;
+                margin-top: 0;
+                width: 100%;
+                max-width: none;
+                border: 1px solid var(--append-card-border);
+                background: var(--append-surface);
+                border-radius: 14px;
+                padding: 1.25rem 1.35rem;
+                position: relative;
+                overflow: hidden;
+                box-shadow: var(--append-card-shadow);
+            }
+            #append-root .append-viz-wrap + .append-viz-wrap {
+                margin-top: clamp(1rem, 2.2vh, 1.5rem);
+            }
+            /* 02 / 04：右侧图表与左栏文案垂直居中对齐 */
+            #append-bleaching-section .append-viz-wrap,
+            #append-timeline-section .append-viz-wrap {
+                align-self: center;
+            }
+            #append-root .append-viz-wrap::after {
+                display: none;
+            }
+            #append-root .append-viz-title {
+                font-family: 'Manrope', sans-serif;
+                font-size: 0.68rem;
+                letter-spacing: 0.2em;
+                text-transform: uppercase;
+                margin-bottom: 0.95rem;
+                color: var(--append-muted);
+                font-weight: 500;
+                opacity: 0.92;
+            }
+            #append-root .append-map-atlas {
+                display: flex;
+                flex-direction: column;
+                gap: 0.9rem;
+            }
+            #append-root .append-map-interactive {
+                position: relative;
+                width: 100%;
+                border-radius: 10px;
+                overflow: hidden;
+                border: 1px solid rgba(0, 0, 0, 0.08);
+                cursor: crosshair;
+            }
+            #append-root .append-map-image {
+                width: 100%;
+                aspect-ratio: 1497 / 391;
+                object-fit: cover;
+                border: none;
+                border-radius: 0;
+                display: block;
+            }
+            #append-root .append-region-legend {
+                border: 1px solid var(--append-card-border);
+                background: var(--append-surface);
+                border-radius: 10px;
+                padding: 0.8rem 0.95rem;
+                box-shadow: var(--append-card-shadow);
+            }
+            #append-root .append-region-legend-title {
+                font-family: 'Noto Sans SC', sans-serif;
+                font-size: 0.95rem;
+                letter-spacing: 0.01em;
+                color: #000;
+                margin-bottom: 0.55rem;
+                font-weight: 600;
+            }
+            #append-root .append-region-grid {
+                list-style: none;
+                margin: 0;
+                padding: 0;
+                display: grid;
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+                gap: 0.35rem 0.7rem;
+            }
+            #append-root .append-region-item {
+                display: flex;
+                align-items: center;
+                gap: 0.45rem;
+                font-family: 'Noto Sans SC', sans-serif;
+                font-size: 0.76rem;
+                line-height: 1.2;
+                color: #111;
+            }
+            #append-root .append-region-swatch {
+                width: 0.64rem;
+                height: 0.64rem;
+                border-radius: 2px;
+                flex-shrink: 0;
+            }
+            #append-tooltip {
+                position: fixed;
+                z-index: 10001;
+                pointer-events: none;
+                padding: 0.58rem 0.8rem;
+                border-radius: 8px;
+                font-size: 0.72rem;
+                line-height: 1.5;
+                background: rgba(255, 255, 255, 0.94);
+                color: #141414;
+                border: 1px solid rgba(20, 20, 20, 0.08);
+                box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+                transform: translate(-50%, -120%);
+                opacity: 0;
+                transition: opacity 0.24s ease;
+                white-space: nowrap;
+            }
+            #append-tooltip.show { opacity: 1; }
+            #append-tooltip.append-tooltip--atlas {
+                white-space: normal;
+                max-width: min(18rem, calc(100vw - 24px));
+                padding: 0.65rem 0.85rem 0.7rem;
+                font-family: "Noto Sans", "Segoe UI", system-ui, sans-serif;
+                font-size: 0.74rem;
+                line-height: 1.45;
+                color: #f0f2f5;
+                background: rgba(20, 24, 28, 0.82);
+                border: 1px solid rgba(255, 255, 255, 0.12);
+                box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+                backdrop-filter: blur(10px);
+                -webkit-backdrop-filter: blur(10px);
+            }
+            #append-tooltip.append-tooltip--atlas .append-atlas-name {
+                display: block;
+                font-weight: 600;
+                font-size: 0.8rem;
+                letter-spacing: 0.02em;
+                color: #fff;
+                margin-bottom: 0.4em;
+            }
+            #append-tooltip.append-tooltip--atlas .append-atlas-row {
+                display: block;
+                color: rgba(235, 238, 242, 0.88);
+                font-size: 0.72rem;
+            }
+            #append-tooltip.append-tooltip--atlas .append-atlas-label {
+                color: rgba(200, 206, 214, 0.75);
+                margin-right: 0.35em;
+            }
+            #append-tooltip.append-tooltip--atlas .append-atlas-risk-l { color: #7dd3c0; }
+            #append-tooltip.append-tooltip--atlas .append-atlas-risk-m { color: #c8d0da; }
+            #append-tooltip.append-tooltip--atlas .append-atlas-risk-mh { color: #e8c48a; }
+            #append-tooltip.append-tooltip--atlas .append-atlas-risk-h { color: #f0a090; }
+            #append-tooltip.append-tooltip--atlas .append-atlas-risk-vh { color: #ff8a80; }
+            #append-root .append-grid-note {
+                margin-top: 1rem;
+                font-size: 0.7rem;
+                letter-spacing: 0.04em;
+                color: var(--append-whisper);
+                line-height: 1.6;
+            }
+            #append-root .append-credits {
+                grid-column: 1;
+                grid-row: auto;
+                display: flex;
+                flex-direction: column;
+                gap: 0.55rem;
+                font-size: 0.68rem;
+                letter-spacing: 0.12em;
+                text-transform: uppercase;
+                color: var(--append-muted);
+                margin-top: clamp(1.35rem, 2.8vh, 2rem);
+                max-width: 100%;
+                align-self: end;
+            }
+            /* 尾声照片墙：双序列无缝横向滚动 */
+            #append-root .append-photo-marquee {
+                grid-column: 2;
+                width: 100%;
+                max-width: none;
+                margin-top: 0;
+                overflow: hidden;
+                position: relative;
+                opacity: 0.9;
+                pointer-events: none;
+                mask-image: linear-gradient(to right, transparent 0%, black 9%, black 91%, transparent 100%);
+                -webkit-mask-image: linear-gradient(to right, transparent 0%, black 9%, black 91%, transparent 100%);
+            }
+            #append-root .append-photo-track {
+                width: max-content;
+                display: flex;
+                gap: clamp(0.6rem, 1.2vw, 1rem);
+                animation: appendPhotoScroll 40s linear infinite;
+                will-change: transform;
+            }
+            #append-root .append-photo-strip {
+                display: flex;
+                gap: clamp(0.6rem, 1.2vw, 1rem);
+                min-width: max-content;
+                padding-inline: 0.2rem;
+            }
+            #append-root .append-photo-card {
+                width: clamp(168px, 12.8vw, 214px);
+                flex-shrink: 0;
+                background: var(--append-surface);
+                border: 1px solid var(--append-card-border);
+                box-shadow: var(--append-card-shadow);
+                padding: 0.4rem 0.4rem 1rem;
+            }
+            #append-root .append-photo-card.offset-up { margin-top: -0.45rem; }
+            #append-root .append-photo-card.offset-down { margin-top: 0.45rem; }
+            #append-root .append-photo-card.rot-n1 { transform: rotate(-1.4deg); }
+            #append-root .append-photo-card.rot-p1 { transform: rotate(1.2deg); }
+            #append-root .append-photo-card.rot-n2 { transform: rotate(-2deg); }
+            #append-root .append-photo-card.rot-p2 { transform: rotate(2deg); }
+            #append-root .append-photo-img {
+                width: 100%;
+                height: clamp(102px, 7.6vw, 136px);
+                object-fit: cover;
+                display: block;
+                filter: grayscale(0.18) contrast(1.04) saturate(0.92);
+            }
+            /* Temperature _ Copernicus.html Ch.4（尾声）：覆盖 thesis append-panel grid，等价 outer chapter + Tailwind paddings */
+            #append-root #append-credit-section.append-panel {
+                display: flex !important;
+                flex-direction: column !important;
+                grid-template-columns: unset !important;
+                align-content: flex-start !important;
+                justify-items: stretch !important;
+                align-items: stretch !important;
+                column-gap: 0 !important;
+                row-gap: 0 !important;
+                max-width: none !important;
+                width: 100% !important;
+                margin-inline: 0 auto !important;
+                /* 等价 p-12 md:p-24（不得写 0 !important，否则压掉原版边距） */
+                padding: 3rem !important;
+                overflow: hidden !important;
+                overflow-x: hidden !important;
+                border-bottom-color: transparent;
+                box-sizing: border-box !important;
+            }
+            @media (min-width: 768px) {
+                #append-root #append-credit-section.append-panel {
+                    padding: 6rem !important;
+                }
+            }
+            /* Epilogue 顶栏文案区：等价 flex-shrink-0 max-w-2xl mb-12（Tailwind CDN 失效时仍成立） */
+            #append-root #append-credit-section > div:first-of-type {
+                flex-shrink: 0;
+                max-width: 42rem;
+                margin-bottom: 3rem;
+            }
+            /* 照片跑道外壳：等价 flex-1 flex items-center + 允许列 flex 收缩，跑马灯居中裁切且无横向滚动条 */
+            #append-root #append-credit-section > div:nth-child(2) {
+                flex: 1 1 0%;
+                min-height: 0;
+                display: flex;
+                align-items: center;
+                position: relative;
+                overflow: hidden !important;
+                overflow-x: hidden !important;
+                scrollbar-width: none;
+                -ms-overflow-style: none;
+            }
+            #append-root #append-credit-section > div:nth-child(2)::-webkit-scrollbar {
+                display: none;
+            }
+            #append-root #append-credit-section > div:nth-child(3) {
+                flex-shrink: 0;
+            }
+
+            /* Photo Wall — Temperature 原版 + 本页专用关键帧名称 */
+            #append-credit-section .photo-card {
+                flex-shrink: 0;
+                background: white;
+                padding: 10px;
+                box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+                transition: transform 0.3s ease;
+                width: 220px;
+            }
+            #append-credit-section .photo-card:hover {
+                transform: scale(1.05) !important;
+                z-index: 10;
+            }
+            /* 等价 h-44 w-full object-cover pointer-events-none */
+            #append-credit-section .photo-card img {
+                width: 100%;
+                max-width: 100%;
+                height: 11rem;
+                object-fit: cover;
+                pointer-events: none;
+                display: block;
+                filter: none;
+            }
+
+            /* 等价 Tailwind rotate-*（与 HTML class 同名） */
+
+            #append-credit-section .photo-card.rotate-1 { transform: rotate(1deg); }
+            #append-credit-section .photo-card.rotate-2 { transform: rotate(2deg); }
+            #append-credit-section .photo-card.rotate-3 { transform: rotate(3deg); }
+            #append-credit-section .photo-card.-rotate-1 { transform: rotate(-1deg); }
+            #append-credit-section .photo-card.-rotate-2 { transform: rotate(-2deg); }
+            #append-credit-section .photo-card.-rotate-3 { transform: rotate(-3deg); }
+
+            @keyframes temperatureEpilogueMarquee {
+                0% { transform: translateX(0); }
+                100% { transform: translateX(-50%); }
+            }
+            /* gap-10 py-10 + marquee：不依赖 CDN 亦能横向循环 */
+            #append-root #append-credit-section .marquee-track {
+                display: flex;
+                gap: 2.5rem;
+                padding-top: 2.5rem;
+                padding-bottom: 2.5rem;
+                width: max-content;
+                animation: temperatureEpilogueMarquee 50s linear infinite;
+                will-change: transform;
+            }
+            #append-root #append-credit-section .marquee-track:hover {
+                animation-play-state: paused;
+            }
+            /* Coral Breath · 嵌入式尝试.html：与顶栏留白对齐 chapter-2，避免场景被 fixed nav 遮挡或纵向溢出 */
+            #append-coral-garden-section.append-panel {
+                --append-coral-nav-pad: 5.75rem;
+                /* 整页内容上移：抬头、WebGL、底部控件统一视觉基准（与脚本内 scene lift 对齐） */
+                --cg-shift-up: clamp(2.75rem, 5.5vh, 4.25rem);
+                display: flex;
+                flex-direction: column;
+                box-sizing: border-box;
+                padding: 0;
+                padding-top: var(--append-coral-nav-pad);
+                min-height: 100vh;
+                min-height: 100dvh;
+                height: 100vh;
+                height: 100dvh;
+                max-width: none;
+                margin: 0;
+                overflow: hidden;
+                background: #f2f2f2;
+            }
+            #append-root #append-coral-garden-section .append-coral-garden-mount {
+                flex: 1 1 auto;
+                display: block;
+                width: 100%;
+                min-height: 0;
+                height: 100%;
+                border: 0;
+                background: #f2f2f2;
+                position: relative;
+                overflow: hidden;
+            }
+            /* Coral Breath 内嵌 UI（原 尝试.html，作用域隔离，无 Tailwind） */
+            #append-root #append-coral-garden-section .cg-root {
+                position: relative;
+                min-height: 100%;
+                height: 100%;
+                width: 100%;
+                box-sizing: border-box;
+                background: #f2f2f2;
+                font-family: 'Inter', 'Manrope', system-ui, sans-serif;
+                display: flex;
+                flex-direction: column;
+                overflow: hidden;
+                user-select: none;
+                -webkit-user-select: none;
+            }
+            #append-root #append-coral-garden-section .cg-mono {
+                font-family: 'JetBrains Mono', ui-monospace, monospace;
+            }
+            #append-root #append-coral-garden-section .cg-tooltip-fade {
+                transition: opacity 0.4s cubic-bezier(0.23, 1, 0.32, 1), transform 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+            }
+            #append-root #append-coral-garden-section .cg-progress-ring-circle {
+                transition: stroke-dashoffset 0.09s linear;
+            }
+            #append-root #append-coral-garden-section .cg-svg-rotate {
+                transform: rotate(-90deg);
+            }
+            #append-root #append-coral-garden-section .cg-overlay-top {
+                position: absolute;
+                top: max(0.65rem, calc(3rem - var(--cg-shift-up)));
+                left: clamp(1.25rem, 4vw, 3rem);
+                font-size: 10px;
+                letter-spacing: 0.6em;
+                text-transform: uppercase;
+                font-weight: 700;
+                color: rgba(0, 0, 0, 0.2);
+                z-index: 10;
+                pointer-events: none;
+            }
+            #append-root #append-coral-garden-section .cg-canvas-wrap {
+                position: absolute;
+                inset: 0;
+                width: 100%;
+                height: 100%;
+            }
+            #append-root #append-coral-garden-section .cg-tooltip {
+                position: fixed;
+                z-index: 200;
+                width: 300px;
+                max-width: calc(100vw - 2rem);
+                background: rgba(255, 255, 255, 0.95);
+                backdrop-filter: blur(12px);
+                -webkit-backdrop-filter: blur(12px);
+                padding: 1.5rem;
+                border-radius: 12px;
+                box-shadow: 0 15px 45px rgba(0, 0, 0, 0.05);
+                border: 1px solid rgba(255, 255, 255, 0.4);
+                pointer-events: none;
+            }
+            #append-root #append-coral-garden-section .cg-tooltip-tag {
+                font-size: 8px;
+                text-transform: uppercase;
+                letter-spacing: 0.4em;
+                color: rgba(26, 75, 140, 0.4);
+                font-weight: 700;
+                margin-bottom: 0.5rem;
+            }
+            #append-root #append-coral-garden-section .cg-tooltip-names-row {
+                display: flex;
+                flex-direction: row;
+                align-items: flex-start;
+                gap: 12px;
+                margin-bottom: 1rem;
+            }
+            #append-root #append-coral-garden-section .cg-tooltip-thumb {
+                width: 40px;
+                height: 40px;
+                flex-shrink: 0;
+                border-radius: 50%;
+                object-fit: contain;
+                object-position: center;
+                border: 2px solid rgba(255, 255, 255, 0.95);
+                box-sizing: border-box;
+                background: transparent;
+            }
+            #append-root #append-coral-garden-section .cg-tooltip-names-text {
+                display: flex;
+                flex-direction: column;
+                gap: 2px;
+                min-width: 0;
+                flex: 1;
+            }
+            #append-root #append-coral-garden-section .cg-tooltip-title {
+                font-size: 1.125rem;
+                font-weight: 600;
+                color: #1A4B8C;
+                letter-spacing: -0.025em;
+                margin: 0;
+                line-height: 1.25;
+            }
+            #append-root #append-coral-garden-section .cg-tooltip-en {
+                font-size: 10px;
+                font-weight: 500;
+                color: #d1d5db;
+                font-style: italic;
+                letter-spacing: 0.05em;
+                margin: 0;
+            }
+            #append-root #append-coral-garden-section .cg-tooltip-rule {
+                height: 1px;
+                width: 100%;
+                background: rgba(26, 75, 140, 0.05);
+                margin-bottom: 1rem;
+            }
+            #append-root #append-coral-garden-section .cg-tooltip-desc {
+                font-size: 12px;
+                color: rgba(107, 114, 128, 0.9);
+                line-height: 1.625;
+                font-weight: 400;
+            }
+            #append-root #append-coral-garden-section .cg-bottom {
+                position: absolute;
+                bottom: calc(4rem + var(--cg-shift-up));
+                left: 0;
+                width: 100%;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 2rem;
+                z-index: 10;
+                pointer-events: none;
+            }
+            #append-root #append-coral-garden-section .cg-status {
+                font-size: 1.125rem;
+                font-weight: 500;
+                letter-spacing: 0.1em;
+                color: rgba(51, 51, 51, 0.7);
+            }
+            #append-root #append-coral-garden-section .cg-ring-wrap {
+                position: relative;
+                width: 3.5rem;
+                height: 3.5rem;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                pointer-events: auto;
+            }
+            #append-root #append-coral-garden-section .cg-ring-dot {
+                position: absolute;
+                width: 0.25rem;
+                height: 0.25rem;
+                background: #1A4B8C;
+                border-radius: 9999px;
+                transition: transform 0.3s ease, opacity 0.3s ease;
+            }
+            #append-root #append-coral-garden-section .cg-ring-dot.is-holding {
+                transform: scale(3);
+            }
+            #append-root #append-coral-garden-section .cg-ring-dot:not(.is-holding) {
+                opacity: 0.2;
+            }
+            #append-root #append-coral-garden-section .cg-meta {
+                position: absolute;
+                bottom: calc(3rem + var(--cg-shift-up));
+                left: 3rem;
+                display: flex;
+                gap: 2.5rem;
+                font-size: 8px;
+                letter-spacing: 0.2em;
+                font-family: 'JetBrains Mono', ui-monospace, monospace;
+                color: rgba(0, 0, 0, 0.1);
+                text-transform: uppercase;
+                z-index: 10;
+                pointer-events: none;
+            }
+            /* 第五屏：沉浸式地球叙事（来自尝试111，作用域隔离） */
+            #append-ocean-narrative.append-panel {
+                display: block;
+                padding: 0;
+                max-width: none;
+                margin: 0;
+                grid-template-columns: unset;
+                column-gap: unset;
+                row-gap: unset;
+                align-content: stretch;
+                overflow: hidden;
+                --on-bg: #f2f2f2;
+                --on-deep: #082a6b;
+                --on-accent: #0a3a8a;
+                --on-text: #1a2744;
+                --on-text-soft: rgba(26, 39, 68, 0.62);
+                --on-coral: #ff4834;
+                --on-amber: #ff6400;
+                font-family: 'Manrope', system-ui, -apple-system, sans-serif;
+                color: var(--on-text);
+                font-weight: 400;
+                -webkit-font-smoothing: antialiased;
+            }
+            #append-ocean-narrative::before {
+                content: '';
+                position: absolute;
+                inset: 0;
+                pointer-events: none;
+                z-index: 0;
+                background:
+                    radial-gradient(ellipse 85% 70% at 50% 45%, rgba(10, 58, 138, 0.09) 0%, transparent 55%),
+                    radial-gradient(ellipse 120% 80% at 50% 100%, rgba(8, 42, 107, 0.14) 0%, transparent 50%),
+                    linear-gradient(180deg, var(--on-bg) 0%, var(--on-bg) 100%);
+            }
+            #append-ocean-narrative .ocean-narr-noise {
+                position: absolute;
+                inset: 0;
+                pointer-events: none;
+                z-index: 1;
+                opacity: 0.04;
+                background-image: radial-gradient(rgba(8, 42, 107, 0.35) 0.5px, transparent 0.5px);
+                background-size: 4px 4px;
+            }
+            #append-ocean-narrative #ocean-narr-canvas-container {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                z-index: 5;
+            }
+            #append-ocean-narrative #ocean-narr-svg-overlay {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                z-index: 20;
+                pointer-events: none;
+            }
+            #append-ocean-narrative #ocean-narr-svg-overlay .cause-arrow-group {
+                pointer-events: auto;
+                cursor: default;
+            }
+            #append-ocean-narrative .cause-block {
+                position: absolute;
+                z-index: 30;
+                display: flex;
+                flex-direction: column;
+                gap: 0;
+                cursor: default;
+                padding: 0;
+                border-radius: 8px;
+                max-width: 280px;
+                transition: opacity 0.28s ease, transform 0.28s ease;
+            }
+            #append-ocean-narrative .cause-head {
+                display: flex;
+                flex-direction: column;
+                align-items: inherit;
+                gap: 0.3rem;
+                margin: 0;
+                padding: 0.5rem 0.6rem;
+                width: 100%;
+                max-width: 100%;
+                font: inherit;
+                color: inherit;
+                text-align: inherit;
+                cursor: pointer;
+                border: 1px solid rgba(10, 58, 138, 0.28);
+                border-radius: 8px;
+                background: rgba(255, 255, 255, 0.48);
+                box-shadow: 0 2px 10px rgba(8, 42, 107, 0.06);
+                transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease;
+            }
+            #append-ocean-narrative .cause-head:hover {
+                border-color: rgba(10, 58, 138, 0.55);
+                background: rgba(255, 255, 255, 0.82);
+                box-shadow: 0 4px 14px rgba(8, 42, 107, 0.1);
+            }
+            #append-ocean-narrative .cause-head:focus { outline: none; }
+            #append-ocean-narrative .cause-head:focus-visible {
+                border-color: var(--on-accent);
+                box-shadow: 0 0 0 3px rgba(10, 58, 138, 0.22);
+            }
+            #append-ocean-narrative .cause-head:active { transform: scale(0.99); }
+            #append-ocean-narrative .cause-head-hint {
+                display: inline-flex;
+                align-items: center;
+                gap: 0.35rem;
+                margin-top: 0.15rem;
+                font-size: 0.62rem;
+                font-weight: 600;
+                letter-spacing: 0.08em;
+                text-transform: uppercase;
+                color: var(--on-accent);
+                text-decoration: underline;
+                text-decoration-thickness: 1px;
+                text-underline-offset: 2px;
+            }
+            #append-ocean-narrative .cause-head-hint::before {
+                content: '';
+                width: 0.35rem;
+                height: 0.35rem;
+                border-radius: 50%;
+                background: var(--on-accent);
+                opacity: 0.85;
+                flex-shrink: 0;
+            }
+            #append-ocean-narrative .cause-chart-slot { display: none; }
+            #append-ocean-narrative .cause-kicker {
+                font-size: 0.68rem;
+                letter-spacing: 0.12em;
+                text-transform: uppercase;
+                color: var(--on-text-soft);
+                font-weight: 600;
+            }
+            #append-ocean-narrative .cause-desc {
+                display: block;
+                margin: 0;
+                font-size: 0.78rem;
+                font-weight: 400;
+                color: var(--on-text);
+                letter-spacing: 0.01em;
+                line-height: 1.38;
+            }
+            #append-ocean-narrative .cause-chart {
+                width: 100%;
+                border-radius: 8px;
+                overflow: hidden;
+                border: 1px solid rgba(10, 58, 138, 0.18);
+                background: rgba(255, 255, 255, 0.55);
+                box-shadow: 0 1px 8px rgba(8, 42, 107, 0.06);
+            }
+            #append-ocean-narrative .cause-chart iframe {
+                display: block;
+                width: 100%;
+                height: 200px;
+                border: 0;
+            }
+            #append-ocean-narrative .cause-chart:not(.cause-chart-placeholder) {
+                display: flex;
+                flex-direction: column;
+            }
+            #append-ocean-narrative .cause-chart-link {
+                font-size: 0.62rem;
+                letter-spacing: 0.06em;
+                text-transform: uppercase;
+                color: var(--on-accent);
+                text-decoration: none;
+                font-weight: 600;
+                pointer-events: auto;
+            }
+            #append-ocean-narrative .cause-chart-link:hover { text-decoration: underline; }
+            #append-ocean-narrative .cause-block:hover,
+            #append-ocean-narrative .cause-block.is-hover { opacity: 1; }
+            #append-ocean-narrative .cause-block:not(:hover):not(.is-hover) { opacity: 0.88; }
+            #append-ocean-narrative .svg-line {
+                fill: none;
+                stroke: var(--on-accent);
+                stroke-width: 1.35;
+                opacity: 0.72;
+                transition: stroke 0.28s ease, opacity 0.28s ease, stroke-width 0.28s ease, filter 0.28s ease;
+            }
+            #append-ocean-narrative .svg-line.is-active {
+                stroke: #0c47a8;
+                stroke-width: 1.75;
+                opacity: 1;
+                filter: drop-shadow(0 0 4px rgba(10, 58, 138, 0.35));
+            }
+            #append-ocean-narrative .svg-node {
+                fill: var(--on-bg);
+                stroke: var(--on-accent);
+                stroke-width: 1.35;
+                transition: stroke 0.28s ease, fill 0.28s ease, filter 0.28s ease;
+            }
+            #append-ocean-narrative .svg-node.is-active {
+                stroke: #0c47a8;
+                fill: #ffffff;
+                filter: drop-shadow(0 0 3px rgba(10, 58, 138, 0.4));
+            }
+            #append-ocean-narrative #ocean-narr-labels-container {
+                position: absolute;
+                inset: 0;
+                pointer-events: none;
+                z-index: 25;
+            }
+            #append-ocean-narrative #ocean-narr-labels-container .cause-block { pointer-events: auto; }
+            #append-ocean-narrative #ocean-narr-label-warming { left: 8%; top: 22%; text-align: left; align-items: flex-start; }
+            #append-ocean-narrative #ocean-narr-label-acid { right: 8%; top: 22%; text-align: right; align-items: flex-end; }
+            #append-ocean-narrative #ocean-narr-label-pollution { left: 8%; bottom: 22%; text-align: left; align-items: flex-start; }
+            #append-ocean-narrative #ocean-narr-label-overfish { right: 8%; bottom: 22%; text-align: right; align-items: flex-end; }
+            #append-ocean-narrative .chart-modal .cause-chart iframe { height: min(52vh, 400px); }
+            #append-ocean-narrative #ocean-narr-label-warming .cause-head,
+            #append-ocean-narrative #ocean-narr-label-pollution .cause-head { align-items: flex-start; }
+            #append-ocean-narrative #ocean-narr-label-acid .cause-head,
+            #append-ocean-narrative #ocean-narr-label-overfish .cause-head { align-items: flex-end; }
+            #append-ocean-narrative #ocean-narr-chart-modal.chart-modal {
+                display: none;
+                position: fixed;
+                inset: 0;
+                z-index: 12000;
+                align-items: center;
+                justify-content: center;
+                padding: 1.25rem;
+            }
+            #append-ocean-narrative #ocean-narr-chart-modal.chart-modal.is-open { display: flex; }
+            #append-ocean-narrative .chart-modal-backdrop {
+                position: absolute;
+                inset: 0;
+                background: rgba(26, 39, 68, 0.42);
+                cursor: pointer;
+            }
+            #append-ocean-narrative .chart-modal-panel {
+                position: relative;
+                z-index: 1;
+                width: min(760px, 100%);
+                max-height: min(92vh, 900px);
+                overflow: hidden;
+                display: flex;
+                flex-direction: column;
+                border-radius: 12px;
+                background: var(--on-bg);
+                border: 1px solid rgba(10, 58, 138, 0.16);
+                box-shadow: 0 20px 50px rgba(8, 42, 107, 0.2);
+            }
+            #append-ocean-narrative .chart-modal-header {
+                flex-shrink: 0;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 1rem;
+                padding: 0.85rem 1rem;
+                border-bottom: 1px solid rgba(10, 58, 138, 0.12);
+                background: rgba(255, 255, 255, 0.55);
+            }
+            #append-ocean-narrative .chart-modal-title {
+                margin: 0;
+                font-size: 0.8rem;
+                font-weight: 600;
+                letter-spacing: 0.1em;
+                text-transform: uppercase;
+                color: var(--on-text);
+            }
+            #append-ocean-narrative .chart-modal-close {
+                flex-shrink: 0;
+                width: 2.25rem;
+                height: 2.25rem;
+                border: none;
+                border-radius: 8px;
+                background: rgba(10, 58, 138, 0.08);
+                color: var(--on-deep);
+                font-size: 1.35rem;
+                line-height: 1;
+                cursor: pointer;
+                transition: background 0.2s ease;
+            }
+            #append-ocean-narrative .chart-modal-close:hover { background: rgba(10, 58, 138, 0.16); }
+            #append-ocean-narrative .chart-modal-body {
+                overflow: auto;
+                padding: 1rem;
+                -webkit-overflow-scrolling: touch;
+            }
+            #append-ocean-narrative .chart-modal-body .cause-chart {
+                border: none;
+                box-shadow: none;
+                background: transparent;
+            }
+            @keyframes appendPhotoScroll {
+                0% { transform: translateX(0); }
+                100% { transform: translateX(-50%); }
+            }
+            /* 默认图表高度（无 id 时回退） */
+            #append-root .append-chart-svg {
+                width: 100%;
+                height: clamp(200px, 30vh, 300px);
+                display: block;
+            }
+            /* 按 viewBox 比例微调，更「展陈+电影画幅」留白 */
+            #append-root #append-reefMap {
+                height: clamp(240px, 38vh, 380px);
+            }
+            #append-root .append-flourish-wrap {
+                width: 100%;
+                min-height: clamp(280px, 42vh, 480px);
+            }
+            #append-root .append-flourish-wrap .flourish-embed {
+                width: 100%;
+            }
+            #append-root .append-chart-svg text {
+                font-family: 'Manrope', sans-serif;
+                font-weight: 400;
+                letter-spacing: 0.02em;
+            }
+            @media (max-width: 900px) {
+                #append-ocean-narrative.append-panel {
+                    padding: 0;
+                    padding-inline: 0;
+                    padding-block: 0;
+                }
+                #append-root .append-panel:not(#append-credit-section) {
+                    max-width: 100%;
+                    padding-block: clamp(4rem, 7vh, 5.5rem);
+                    padding-inline: 5vw;
+                    grid-template-columns: 1fr;
+                }
+                #append-root .append-headline {
+                    grid-column: 1;
+                    grid-row: auto;
+                    align-self: start;
+                }
+                #append-root .append-viz-wrap,
+                #append-root .append-credits,
+                #append-root .append-photo-marquee {
+                    grid-column: 1;
+                    max-width: 100%;
+                }
+                #append-root .append-photo-marquee {
+                    grid-row: auto;
+                    margin-top: clamp(0.9rem, 2vh, 1.4rem);
+                }
+                #append-root .append-region-grid {
+                    grid-template-columns: repeat(2, minmax(0, 1fr));
+                }
+                #append-root h2:not(.tw-ignore-append-h2) { font-size: clamp(1.75rem, 7.2vw, 2.55rem); letter-spacing: -0.02em; }
+                #append-root .append-subtitle { font-size: clamp(0.82rem, 3.1vw, 0.96rem); line-height: 1.65; max-width: 100%; }
+                #append-root .append-poetry { font-size: clamp(0.8rem, 2.8vw, 0.92rem); line-height: 1.65; max-width: 100%; }
+                #append-root .append-chart-svg { height: clamp(150px, 26vh, 220px); }
+                #append-root #append-reefMap { height: clamp(160px, 28vh, 240px); }
+                #append-root .append-flourish-wrap { min-height: clamp(240px, 38vh, 400px); }
+                #append-root .append-photo-card {
+                    width: clamp(130px, 36vw, 176px);
+                    padding: 0.34rem 0.34rem 0.72rem;
+                }
+                #append-root .append-photo-img {
+                    height: clamp(82px, 22vw, 116px);
+                }
+                #append-root #append-coral-garden-section.append-panel {
+                    padding-inline: 0 !important;
+                    padding-top: var(--append-coral-nav-pad, 5.75rem) !important;
+                    padding-bottom: 0 !important;
+                    max-width: none;
+                }
+            }
+        </style>
+
+        <div class="append-bg-wrap">
+            <canvas id="append-bg-canvas"></canvas>
+            <div class="append-grain"></div>
+        </div>
+
+        <nav class="append-nav">
+            <div class="append-logo">CORAL REEF · THESIS</div>
+            <div class="append-nav-right">
+                <span>Exhibition</span>
+                <span>Data Art</span>
+                <span>2026</span>
+            </div>
+        </nav>
+
+        <main class="append-main">
+            <section class="append-panel append-theme-blue" id="append-map-section">
+                <div class="append-headline">
+                    <h2>Global Coral Reef Distribution</h2>
+                    <div class="append-decor-line"></div>
+                    <p class="append-poetry">Following the waters between 30°N and 30°S, the world is defined by 29 coral reef regions.<br>Each designated area is a precious living realm cherished by the ocean, yet is quietly being eroded by the crisis of coral bleaching.</p>
+                    <p class="append-subtitle">Allen Coral Atlas bioregions reveal the global reef pattern and regional descriptors at a glance.</p>
+                </div>
+                <div class="append-viz-wrap">
+                    <div class="append-viz-title">01 · Global Reef Distribution</div>
+                    <div class="append-map-atlas">
+                        <div class="append-map-interactive">
+                            <img class="append-map-image" alt="Allen Coral Atlas global coral reef regions" src="file:///C:/Users/%E9%9B%A8%E4%B9%90/assets/figma/fourth-page-map-61a512.png">
+                        </div>
+                        <div class="append-region-legend">
+                            <div class="append-region-legend-title">Region Descriptor*</div>
+                            <ul class="append-region-grid">
+                                <li class="append-region-item"><span class="append-region-swatch" style="background:#91B262;"></span>Andaman Sea</li>
+                                <li class="append-region-item"><span class="append-region-swatch" style="background:#7F59E0;"></span>Timor &amp; Arafura Seas</li>
+                                <li class="append-region-item"><span class="append-region-swatch" style="background:#448FAF;"></span>Central Indian Ocean</li>
+                                <li class="append-region-item"><span class="append-region-swatch" style="background:#F2EE83;"></span>Coral Sea</li>
+                                <li class="append-region-item"><span class="append-region-swatch" style="background:#F4A4D1;"></span>Southwestern Pacific</li>
+                                <li class="append-region-item"><span class="append-region-swatch" style="background:#78EBDC;"></span>GBR &amp; Torres Strait</li>
+                                <li class="append-region-item"><span class="append-region-swatch" style="background:#494882;"></span>Gulf of Aden</li>
+                                <li class="append-region-item"><span class="append-region-swatch" style="background:#8DCCDD;"></span>Mesoamerica</li>
+                                <li class="append-region-item"><span class="append-region-swatch" style="background:#A84144;"></span>Hawaiian Islands</li>
+                                <li class="append-region-item"><span class="append-region-swatch" style="background:#D57F80;"></span>Southern Asia</li>
+                                <li class="append-region-item"><span class="append-region-swatch" style="background:#383292;"></span>Southeast Asian Archipelago</li>
+                                <li class="append-region-item"><span class="append-region-swatch" style="background:#61B345;"></span>Eastern Micronesia</li>
+                                <li class="append-region-item"><span class="append-region-swatch" style="background:#F28E5D;"></span>Western Micronesia Sea</li>
+                                <li class="append-region-item"><span class="append-region-swatch" style="background:#8A673F;"></span>Eastern Africa &amp; Madagascar</li>
+                                <li class="append-region-item"><span class="append-region-swatch" style="background:#935F82;"></span>Western Australia</li>
+                                <li class="append-region-item"><span class="append-region-swatch" style="background:#B877D5;"></span>Northern Caribbean &amp; Bahamas</li>
+                                <li class="append-region-item"><span class="append-region-swatch" style="background:#D65C79;"></span>Southeastern Asia</li>
+                                <li class="append-region-item"><span class="append-region-swatch" style="background:#F7BD95;"></span>Eastern PNG &amp; Solomons Islands</li>
+                                <li class="append-region-item"><span class="append-region-swatch" style="background:#C68D66;"></span>Northwestern Arabian Sea</li>
+                                <li class="append-region-item"><span class="append-region-swatch" style="background:#6B93D1;"></span>Philippines</li>
+                                <li class="append-region-item"><span class="append-region-swatch" style="background:#A5DAF9;"></span>Red Sea</li>
+                                <li class="append-region-item"><span class="append-region-swatch" style="background:#7A5A41;"></span>Western Indian Ocean</li>
+                                <li class="append-region-item"><span class="append-region-swatch" style="background:#A97A47;"></span>South China Sea</li>
+                                <li class="append-region-item"><span class="append-region-swatch" style="background:#B15A98;"></span>Southeastern Caribbean</li>
+                                <li class="append-region-item"><span class="append-region-swatch" style="background:#99C17B;"></span>Subtropical Eastern Australia</li>
+                                <li class="append-region-item"><span class="append-region-swatch" style="background:#DF8B52;"></span>Northeastern Asia</li>
+                                <li class="append-region-item"><span class="append-region-swatch" style="background:#7297D6;"></span>Tropical Eastern Pacific</li>
+                                <li class="append-region-item"><span class="append-region-swatch" style="background:#A57CEB;"></span>Central South Pacific</li>
+                                <li class="append-region-item"><span class="append-region-swatch" style="background:#CCCCCC;"></span>Small reefs or low coral areas</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 第五屏（序列第 5 页）：全球胁迫因素沉浸叙事 + Graphy 图表弹窗 -->
+            <section class="append-panel append-theme-light" id="append-ocean-narrative" aria-label="Ocean stress narrative">
+                <div class="ocean-narr-noise" aria-hidden="true"></div>
+                <div id="ocean-narr-canvas-container">
+                    <canvas id="ocean-narr-globe"></canvas>
+                </div>
+                <svg id="ocean-narr-svg-overlay" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                    <defs>
+                        <marker id="ocean-narr-arrow-head" markerWidth="5" markerHeight="5" refX="4" refY="2.5" orient="auto">
+                            <path d="M0,0 L5,2.5 L0,5 Z" fill="#0a3a8a" opacity="0.75" />
+                        </marker>
+                    </defs>
+                </svg>
+                <div id="ocean-narr-labels-container">
+                    <div class="cause-block" id="ocean-narr-label-warming" data-cause="warming">
+                        <button type="button" class="cause-head" aria-expanded="false" aria-haspopup="dialog" data-chart-trigger>
+                            <span class="cause-kicker">Climate</span>
+                            <span class="cause-desc">Rising ocean temperatures trigger coral bleaching.</span>
+                            <span class="cause-head-hint">View charts</span>
+                        </button>
+                        <div class="cause-chart-slot">
+                            <div class="cause-chart">
+                                <iframe title="Global surface temperature above pre-industrial levels" src="https://visualize.graphy.app/view/f0897b9c-84db-4c9b-b1bb-8ec962b1d6eb" loading="lazy" sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"></iframe>
+                                <a class="cause-chart-link" href="https://visualize.graphy.app/view/f0897b9c-84db-4c9b-b1bb-8ec962b1d6eb" target="_blank" rel="noopener noreferrer">Open chart in new tab</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="cause-block" id="ocean-narr-label-acid" data-cause="acid">
+                        <button type="button" class="cause-head" aria-expanded="false" aria-haspopup="dialog" data-chart-trigger>
+                            <span class="cause-kicker">Acidification</span>
+                            <span class="cause-desc">Lower pH weakens coral skeletons and slows growth.</span>
+                            <span class="cause-head-hint">View charts</span>
+                        </button>
+                        <div class="cause-chart-slot">
+                            <div class="cause-chart">
+                                <iframe title="Coral reef health: healthy vs degraded ecosystem indicators" src="https://visualize.graphy.app/view/2d4c0d72-af30-4078-bd38-d0f1dbb9aeb4" loading="lazy" sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"></iframe>
+                                <a class="cause-chart-link" href="https://visualize.graphy.app/view/2d4c0d72-af30-4078-bd38-d0f1dbb9aeb4" target="_blank" rel="noopener noreferrer">Open chart in new tab</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="cause-block" id="ocean-narr-label-pollution" data-cause="pollution">
+                        <button type="button" class="cause-head" aria-expanded="false" aria-haspopup="dialog" data-chart-trigger>
+                            <span class="cause-kicker">Pollution</span>
+                            <span class="cause-desc">Waste and runoff smother reefs and poison ecosystems.</span>
+                            <span class="cause-head-hint">View charts</span>
+                        </button>
+                        <div class="cause-chart-slot">
+                            <div class="cause-chart">
+                                <iframe title="Share of global plastic waste emitted to the ocean, 2019" src="https://visualize.graphy.app/view/187756f2-d395-471b-9e86-1bfacbb94d86" loading="lazy" sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"></iframe>
+                                <a class="cause-chart-link" href="https://visualize.graphy.app/view/187756f2-d395-471b-9e86-1bfacbb94d86" target="_blank" rel="noopener noreferrer">Open chart in new tab</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="cause-block" id="ocean-narr-label-overfish" data-cause="overfish">
+                        <button type="button" class="cause-head" aria-expanded="false" aria-haspopup="dialog" data-chart-trigger>
+                            <span class="cause-kicker">Ocean Warming</span>
+                            <span class="cause-desc">Monthly global sea surface temperature shows a long-term rise, redistributing heat across ocean basins.</span>
+                            <span class="cause-head-hint">View charts</span>
+                        </button>
+                        <div class="cause-chart-slot">
+                            <div class="cause-chart">
+                                <iframe title="Monthly Global Sea Surface Temperature (1990–2024)" src="https://visualize.graphy.app/view/454a3f69-5f22-4235-8561-abfd68da73a2" loading="lazy" sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"></iframe>
+                                <a class="cause-chart-link" href="https://visualize.graphy.app/view/454a3f69-5f22-4235-8561-abfd68da73a2" target="_blank" rel="noopener noreferrer">Open chart in new tab</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="ocean-narr-chart-modal" class="chart-modal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="ocean-narr-chart-modal-title">
+                    <div class="chart-modal-backdrop" data-ocean-narr-close-modal tabindex="-1" aria-hidden="true"></div>
+                    <div class="chart-modal-panel">
+                        <header class="chart-modal-header">
+                            <h2 id="ocean-narr-chart-modal-title" class="chart-modal-title"></h2>
+                            <button type="button" class="chart-modal-close" data-ocean-narr-close-modal aria-label="Close dialog">×</button>
+                        </header>
+                        <div class="chart-modal-body" id="ocean-narr-chart-modal-body"></div>
+                    </div>
+                </div>
+            </section>
+            <script>
+                (function () {
+                    const ROOT = document.getElementById('append-ocean-narrative');
+                    if (!ROOT) return;
+                    const canvas = document.getElementById('ocean-narr-globe');
+                    const ctx = canvas.getContext('2d');
+                    const svgOverlay = document.getElementById('ocean-narr-svg-overlay');
+
+                    let width = 0;
+                    let height = 0;
+
+                    const FOCAL_LENGTH = 800;
+                    const RADIUS = 175;
+
+                    const COL = {
+                        blue: [10, 58, 138],
+                        coral: [255, 72, 52],
+                        amber: [255, 100, 0]
+                    };
+
+                    let edges = [];
+                    let tropicalTris = [];
+                    let anchors = {};
+
+                    let activeCause = null;
+
+                    function getSpherePoint(r, theta, phi) {
+                        return {
+                            x: r * Math.sin(phi) * Math.cos(theta),
+                            y: r * Math.cos(phi),
+                            z: r * Math.sin(phi) * Math.sin(theta)
+                        };
+                    }
+
+                    function generateGeometry() {
+                        edges = [];
+                        tropicalTris = [];
+                        const numLat = 15;
+                        const numLon = 30;
+                        const addEdge = (p1, p2, type = 'normal') => {
+                            edges.push({ p1: { ...p1 }, p2: { ...p2 }, type });
+                        };
+
+                        for (let j = 0; j < numLon; j++) {
+                            const theta = (j / numLon) * 2 * Math.PI;
+                            for (let i = 0; i < numLat; i++) {
+                                const phi1 = (i / numLat) * Math.PI;
+                                const phi2 = ((i + 1) / numLat) * Math.PI;
+                                if (phi1 < 0.03 || phi2 > Math.PI - 0.03) continue;
+                                addEdge(getSpherePoint(RADIUS, theta, phi1), getSpherePoint(RADIUS, theta, phi2));
+                            }
+                        }
+
+                        for (let i = 1; i < numLat; i++) {
+                            const phi = (i / numLat) * Math.PI;
+                            for (let j = 0; j < numLon; j++) {
+                                const theta1 = (j / numLon) * 2 * Math.PI;
+                                const theta2 = ((j + 1) / numLon) * 2 * Math.PI;
+                                addEdge(getSpherePoint(RADIUS, theta1, phi), getSpherePoint(RADIUS, theta2, phi));
+                            }
+                        }
+
+                        const phiT0 = Math.PI / 3;
+                        const phiT1 = (2 * Math.PI) / 3;
+                        const latSteps = 9;
+                        const lonSteps = 28;
+                        const rFill = RADIUS * 0.992;
+                        for (let i = 0; i < latSteps; i++) {
+                            const p1 = phiT0 + (i / latSteps) * (phiT1 - phiT0);
+                            const p2 = phiT0 + ((i + 1) / latSteps) * (phiT1 - phiT0);
+                            const phMid = (p1 + p2) * 0.5;
+                            for (let j = 0; j < lonSteps; j++) {
+                                const t1 = (j / lonSteps) * 2 * Math.PI;
+                                const t2 = ((j + 1) / lonSteps) * 2 * Math.PI;
+                                const thMid = (t1 + t2) * 0.5;
+                                const a = getSpherePoint(rFill, t1, p1);
+                                const b = getSpherePoint(rFill, t2, p1);
+                                const c = getSpherePoint(rFill, t2, p2);
+                                const d = getSpherePoint(rFill, t1, p2);
+                                tropicalTris.push({ a, b, c, th: thMid, ph: phMid });
+                                tropicalTris.push({ a: a, b: c, c: d, th: thMid, ph: phMid });
+                            }
+                        }
+
+                        anchors = {
+                            warming: getSpherePoint(RADIUS * 1.04, 0, Math.PI / 2),
+                            acid: getSpherePoint(RADIUS * 1.04, Math.PI / 2, Math.PI / 2),
+                            pollution: getSpherePoint(RADIUS * 1.04, Math.PI, Math.PI / 2),
+                            overfish: getSpherePoint(RADIUS * 1.04, (3 * Math.PI) / 2, Math.PI / 2)
+                        };
+                    }
+
+                    function rotate3D(point, pitch, yaw, roll) {
+                        let { x, y, z } = point;
+                        let cosY = Math.cos(yaw), sinY = Math.sin(yaw);
+                        let x1 = x * cosY - z * sinY;
+                        let z1 = x * sinY + z * cosY;
+                        x = x1; z = z1;
+                        let cosX = Math.cos(pitch), sinX = Math.sin(pitch);
+                        let y1 = y * cosX - z * sinX;
+                        let z2 = y * sinX + z * cosX;
+                        y = y1; z = z2;
+                        let cosZ = Math.cos(roll), sinZ = Math.sin(roll);
+                        let x2 = x * cosZ - y * sinZ;
+                        let y2 = x * sinZ + y * cosZ;
+                        return { x: x2, y: y2, z: z2 };
+                    }
+
+                    function project3D(point) {
+                        const scale = FOCAL_LENGTH / (FOCAL_LENGTH + point.z);
+                        return {
+                            x: point.x * scale + width / 2,
+                            y: point.y * scale + height / 2,
+                            scale,
+                            z: point.z
+                        };
+                    }
+
+                    const labelConnections = [
+                        { id: 'warming', labelId: 'ocean-narr-label-warming', align: 'left' },
+                        { id: 'acid', labelId: 'ocean-narr-label-acid', align: 'right' },
+                        { id: 'pollution', labelId: 'ocean-narr-label-pollution', align: 'left' },
+                        { id: 'overfish', labelId: 'ocean-narr-label-overfish', align: 'right' }
+                    ];
+
+                    let svgPaths = {};
+
+                    function initSVG() {
+                        svgOverlay.querySelectorAll('.cause-arrow-group').forEach((n) => n.remove());
+                        labelConnections.forEach((conn) => {
+                            const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                            g.setAttribute('class', 'cause-arrow-group');
+                            g.dataset.cause = conn.id;
+
+                            const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                            path.setAttribute('class', 'svg-line');
+                            path.setAttribute('marker-end', 'url(#ocean-narr-arrow-head)');
+                            g.appendChild(path);
+
+                            const n1 = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                            n1.setAttribute('width', '7');
+                            n1.setAttribute('height', '7');
+                            n1.setAttribute('class', 'svg-node');
+                            n1.setAttribute('rx', '1');
+                            g.appendChild(n1);
+
+                            const n2 = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                            n2.setAttribute('width', '5');
+                            n2.setAttribute('height', '5');
+                            n2.setAttribute('class', 'svg-node');
+                            n2.setAttribute('rx', '1');
+                            g.appendChild(n2);
+
+                            svgOverlay.appendChild(g);
+                            svgPaths[conn.id] = { path, n1, n2, g };
+                        });
+                    }
+
+                    function setActiveCause(id) {
+                        activeCause = id;
+                        ROOT.querySelectorAll('.cause-block').forEach((el) => {
+                            el.classList.toggle('is-hover', el.dataset.cause === id);
+                        });
+                        Object.keys(svgPaths).forEach((key) => {
+                            const on = key === id;
+                            const { path, n1, n2 } = svgPaths[key];
+                            path.classList.toggle('is-active', on);
+                            n1.classList.toggle('is-active', on);
+                            n2.classList.toggle('is-active', on);
+                        });
+                    }
+
+                    function syncSvgHoverFromDom() {
+                        ROOT.querySelectorAll('.cause-block').forEach((block) => {
+                            const id = block.dataset.cause;
+                            block.addEventListener('mouseenter', () => setActiveCause(id));
+                            block.addEventListener('mouseleave', (e) => {
+                                const to = e.relatedTarget;
+                                const modal = document.getElementById('ocean-narr-chart-modal');
+                                if (
+                                    modal &&
+                                    modal.classList.contains('is-open') &&
+                                    modal.dataset.openCause === id &&
+                                    to &&
+                                    modal.contains(to)
+                                ) {
+                                    return;
+                                }
+                                setActiveCause(null);
+                            });
+                        });
+                        labelConnections.forEach((conn) => {
+                            const g = svgPaths[conn.id].g;
+                            g.addEventListener('mouseenter', () => setActiveCause(conn.id));
+                            g.addEventListener('mouseleave', () => setActiveCause(null));
+                        });
+                    }
+
+                    const chartModal = document.getElementById('ocean-narr-chart-modal');
+                    const chartModalBody = document.getElementById('ocean-narr-chart-modal-body');
+                    const chartModalTitle = document.getElementById('ocean-narr-chart-modal-title');
+                    let openChartBlock = null;
+                    let modalFocusReturn = null;
+
+                    function closeChartModal() {
+                        if (!chartModal.classList.contains('is-open')) return;
+                        const id = chartModal.dataset.openCause;
+                        const block = openChartBlock || ROOT.querySelector('.cause-block[data-cause="' + id + '"]');
+                        const panel = chartModalBody.firstElementChild;
+                        if (block && panel) {
+                            block.querySelector('.cause-chart-slot').appendChild(panel);
+                            const headBtn = block.querySelector('.cause-head');
+                            if (headBtn) headBtn.setAttribute('aria-expanded', 'false');
+                        }
+                        chartModal.classList.remove('is-open');
+                        chartModal.setAttribute('aria-hidden', 'true');
+                        chartModal.dataset.openCause = '';
+                        openChartBlock = null;
+                        setActiveCause(null);
+                        if (modalFocusReturn && typeof modalFocusReturn.focus === 'function') {
+                            modalFocusReturn.focus();
+                        }
+                        modalFocusReturn = null;
+                    }
+
+                    function openChartModal(block) {
+                        if (chartModal.classList.contains('is-open')) {
+                            if (openChartBlock === block) {
+                                closeChartModal();
+                                return;
+                            }
+                            closeChartModal();
+                        }
+                        const slot = block.querySelector('.cause-chart-slot');
+                        const panel = slot && slot.firstElementChild;
+                        if (!panel) return;
+                        modalFocusReturn = document.activeElement;
+                        chartModalBody.appendChild(panel);
+                        const kicker = block.querySelector('.cause-kicker');
+                        chartModalTitle.textContent = kicker ? kicker.textContent.trim() : '';
+                        chartModal.dataset.openCause = block.dataset.cause;
+                        chartModal.classList.add('is-open');
+                        chartModal.setAttribute('aria-hidden', 'false');
+                        const headBtn = block.querySelector('.cause-head');
+                        if (headBtn) headBtn.setAttribute('aria-expanded', 'true');
+                        openChartBlock = block;
+                        setActiveCause(block.dataset.cause);
+                        const closeBtn = chartModal.querySelector('.chart-modal-close');
+                        if (closeBtn) closeBtn.focus();
+                    }
+
+                    function initChartModal() {
+                        ROOT.querySelectorAll('[data-chart-trigger]').forEach((btn) => {
+                            btn.addEventListener('click', (e) => {
+                                e.stopPropagation();
+                                const block = btn.closest('.cause-block');
+                                if (block && ROOT.contains(block)) openChartModal(block);
+                            });
+                        });
+                        chartModal.querySelectorAll('[data-ocean-narr-close-modal]').forEach((el) => {
+                            el.addEventListener('click', () => closeChartModal());
+                        });
+                        chartModal.addEventListener('mouseenter', () => {
+                            const id = chartModal.dataset.openCause;
+                            if (id) setActiveCause(id);
+                        });
+                        chartModal.addEventListener('mouseleave', () => {
+                            if (chartModal.classList.contains('is-open')) setActiveCause(null);
+                        });
+                        document.addEventListener('keydown', (e) => {
+                            if (e.key === 'Escape' && chartModal.classList.contains('is-open')) {
+                                closeChartModal();
+                            }
+                        });
+                    }
+
+                    let rafId = 0;
+                    function render(time) {
+                        ctx.clearRect(0, 0, width, height);
+                        if (width < 2 || height < 2) {
+                            rafId = requestAnimationFrame(render);
+                            return;
+                        }
+
+                        const t = time * 0.001;
+                        const baseYaw = t * 0.12;
+                        const pitch = 0.2;
+                        const roll = Math.sin(t * 0.18) * 0.035;
+
+                        const boost = activeCause ? 1.45 : 1;
+                        const baseAlpha = 0.085 * boost;
+
+                        const bandCenterPhi = Math.PI * 0.5;
+                        const globeCenter = { x: 0, y: 0, z: 0 };
+                        const sparkProj = project3D(rotate3D(globeCenter, pitch, baseYaw, roll));
+
+                        const tris = tropicalTris.map((tri) => {
+                            const ar = rotate3D(tri.a, pitch, baseYaw, roll);
+                            const br = rotate3D(tri.b, pitch, baseYaw, roll);
+                            const cr = rotate3D(tri.c, pitch, baseYaw, roll);
+                            const az = (ar.z + br.z + cr.z) / 3;
+                            const pa = project3D(ar);
+                            const pb = project3D(br);
+                            const pc = project3D(cr);
+                            return { pa, pb, pc, az, th: tri.th, ph: tri.ph };
+                        });
+                        tris.sort((a, b) => b.az - a.az);
+
+                        const tw = t;
+                        tris.forEach(({ pa, pb, pc, th, ph }) => {
+                            const bandT = Math.abs(ph - bandCenterPhi) / (Math.PI / 6);
+                            const radialWarmth = Math.max(0, 1 - bandT * bandT);
+                            const shimmer =
+                                0.88 +
+                                0.12 * Math.sin(tw * 0.48 + th * 3) * Math.sin(tw * 0.32 + ph * 2.5);
+                            const breathe = 0.68 + 0.32 * (0.5 + 0.5 * Math.sin(tw * 0.44));
+                            const ripple = 0.9 + 0.1 * Math.sin(tw * 0.62 + th * 1.8 + ph * 0.7);
+                            const flicker = breathe * ripple;
+                            const gradientPhase = 0.5 + 0.5 * Math.sin(th * 2 + tw * 0.32);
+                            const wMix = Math.max(
+                                0.12,
+                                Math.min(1, radialWarmth * (0.42 + 0.58 * gradientPhase) * shimmer)
+                            );
+                            const rC = Math.round(COL.coral[0] * wMix + COL.amber[0] * (1 - wMix));
+                            const gC = Math.round(COL.coral[1] * wMix + COL.amber[1] * (1 - wMix));
+                            const bC = Math.round(COL.coral[2] * wMix + COL.amber[2] * (1 - wMix));
+                            const alpha = baseAlpha * flicker * (0.58 + 0.42 * radialWarmth);
+                            ctx.beginPath();
+                            ctx.moveTo(pa.x, pa.y);
+                            ctx.lineTo(pb.x, pb.y);
+                            ctx.lineTo(pc.x, pc.y);
+                            ctx.closePath();
+                            ctx.fillStyle = 'rgba(' + rC + ',' + gC + ',' + bC + ',' + alpha + ')';
+                            ctx.fill();
+                        });
+
+                        const transformedEdges = edges.map((edge) => {
+                            const p1Rot = rotate3D(edge.p1, pitch, baseYaw, roll);
+                            const p2Rot = rotate3D(edge.p2, pitch, baseYaw, roll);
+                            const p1Proj = project3D(p1Rot);
+                            const p2Proj = project3D(p2Rot);
+                            const avgZ = (p1Rot.z + p2Rot.z) / 2;
+                            return { p1Proj, p2Proj, avgZ };
+                        });
+                        transformedEdges.sort((a, b) => b.avgZ - a.avgZ);
+
+                        ctx.lineWidth = 1.15;
+                        transformedEdges.forEach((edge) => {
+                            let depthAlpha = 1 - (edge.avgZ + RADIUS) / (RADIUS * 2.45);
+                            depthAlpha = Math.max(0.14, Math.min(1, depthAlpha));
+                            const Rr = COL.blue[0], Gg = COL.blue[1], Bb = COL.blue[2];
+                            ctx.strokeStyle = 'rgba(' + Rr + ',' + Gg + ',' + Bb + ',' + depthAlpha * 0.82 + ')';
+                            ctx.beginPath();
+                            ctx.moveTo(edge.p1Proj.x, edge.p1Proj.y);
+                            ctx.lineTo(edge.p2Proj.x, edge.p2Proj.y);
+                            ctx.stroke();
+                        });
+
+                        {
+                            const pulse = 0.5 + 0.5 * Math.sin(tw * 0.95) ** 2;
+                            const pulse2 = 0.45 + 0.55 * Math.sin(tw * 1.25 + 0.6) ** 2;
+                            const coreA = 0.26 * pulse2 * boost;
+                            const ringA = 0.17 * pulse * boost;
+                            const glowA = 0.12 * boost;
+
+                            const cx = sparkProj.x;
+                            const cy = sparkProj.y;
+                            const rs = sparkProj.scale;
+                            const g1 = ctx.createRadialGradient(cx, cy, 0, cx, cy, 38 * rs);
+                            g1.addColorStop(0, 'rgba(255,255,210,' + coreA + ')');
+                            g1.addColorStop(0.18, 'rgba(255,130,28,' + ringA + ')');
+                            g1.addColorStop(0.42, 'rgba(255,48,42,' + glowA + ')');
+                            g1.addColorStop(1, 'rgba(255,20,30,0)');
+                            ctx.fillStyle = g1;
+                            ctx.beginPath();
+                            ctx.arc(cx, cy, 38 * rs, 0, Math.PI * 2);
+                            ctx.fill();
+
+                            const starA = 0.4 * pulse * pulse2 * boost;
+                            ctx.save();
+                            ctx.translate(cx, cy);
+                            ctx.rotate(tw * 0.2);
+                            ctx.strokeStyle = 'rgba(255,245,185,' + starA + ')';
+                            ctx.lineWidth = 1.35;
+                            const rr = 8 * rs;
+                            ctx.beginPath();
+                            ctx.moveTo(-rr, 0);
+                            ctx.lineTo(rr, 0);
+                            ctx.moveTo(0, -rr);
+                            ctx.lineTo(0, rr);
+                            ctx.stroke();
+                            ctx.restore();
+                        }
+
+                        labelConnections.forEach((conn) => {
+                            const anchor3D = anchors[conn.id];
+                            const rotatedAnchor = rotate3D(anchor3D, pitch, baseYaw, roll);
+                            const projectedAnchor = project3D(rotatedAnchor);
+
+                            const labelEl = document.getElementById(conn.labelId);
+                            if (!labelEl) return;
+                            const headEl = labelEl.querySelector('.cause-head') || labelEl;
+                            const rect = headEl.getBoundingClientRect();
+                            const rootRect = ROOT.getBoundingClientRect();
+
+                            let startX, startY;
+                            if (conn.align === 'left') {
+                                startX = rect.right + 12 - rootRect.left;
+                                startY = rect.top + rect.height / 2 - rootRect.top;
+                            } else {
+                                startX = rect.left - 12 - rootRect.left;
+                                startY = rect.top + rect.height / 2 - rootRect.top;
+                            }
+
+                            const targetX = projectedAnchor.x;
+                            const targetY = projectedAnchor.y;
+                            const hDir = conn.align === 'left' ? 1 : -1;
+                            const hLength = 56;
+                            const midX = startX + hLength * hDir;
+
+                            const d = 'M ' + startX + ' ' + startY + ' L ' + midX + ' ' + startY + ' L ' + targetX + ' ' + targetY;
+                            const elements = svgPaths[conn.id];
+                            elements.path.setAttribute('d', d);
+
+                            const ox = 3.5;
+                            elements.n1.setAttribute('transform', 'translate(' + (startX - ox) + ', ' + (startY - ox) + ') rotate(45 ' + ox + ' ' + ox + ')');
+                            elements.n2.setAttribute('transform', 'translate(' + (targetX - 2.5) + ', ' + (targetY - 2.5) + ') rotate(45 2.5 2.5)');
+                        });
+
+                        rafId = requestAnimationFrame(render);
+                    }
+
+                    function resize() {
+                        width = ROOT.clientWidth;
+                        height = ROOT.clientHeight;
+                        canvas.width = width;
+                        canvas.height = height;
+                    }
+
+                    function init() {
+                        resize();
+                        generateGeometry();
+                        initSVG();
+                        syncSvgHoverFromDom();
+                        initChartModal();
+                        rafId = requestAnimationFrame(render);
+                    }
+
+                    window.addEventListener('resize', resize);
+                    if (typeof ResizeObserver !== 'undefined') {
+                        const ro = new ResizeObserver(() => resize());
+                        ro.observe(ROOT);
+                    }
+                    init();
+                })();
+            </script>
+
+            <section class="append-panel append-theme-light" id="append-bleaching-section">
+                <div class="append-headline">
+                    <h2>Coral Bleaching Heatmap</h2>
+                    <div class="append-decor-line"></div>
+                    <p class="append-poetry">From 1884 to 2019, the heatmap traces rising bleaching intensity year by year.<br>Before colour fades the coral grows quiet; after the numbers rise the reef grows silent.</p>
+                    <p class="append-subtitle">A time-lapse view of reef bleaching across regions, revealing decades of warming-driven change.</p>
+                </div>
+                <div class="append-viz-wrap">
+                    <div class="append-viz-title">02 · Bleaching Rate 1884—2019</div>
+                    <div class="append-flourish-wrap">
+                        <div class="flourish-embed flourish-heatmap" data-src="visualisation/28786550">
+                            <script src="https://public.flourish.studio/resources/embed.js"></script>
+                            <noscript><img src="https://public.flourish.studio/visualisation/28786550/thumbnail" width="100%" alt="heatmap visualization"></noscript>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="append-panel append-theme-light" id="append-timeline-section">
+                <div class="append-headline">
+                    <h2>Coral Reef Stress Radar</h2>
+                    <div class="append-decor-line"></div>
+                    <p class="append-poetry">The radar reveals the hidden forces shaping coral health:
+                        rising heat, acidification, pollution and overfishing form the outer edge of risk,
+                        while reef resilience—health and recovery—dwells closer to the center.<br>When these pressures compound, even the strongest reefs falter.
+                        The jagged contrast between risk and resilience is no longer abstract—it is measurable, and visible.</p>
+                    <p class="append-subtitle">Multi-factor pressures driving bleaching, across global reefs.</p>
+                </div>
+                <div class="append-viz-wrap">
+                    <div class="append-viz-title">03 · Coral Bleaching Pressure Radar</div>
+                    <div class="append-flourish-wrap">
+                        <div class="flourish-embed flourish-radar" data-src="visualisation/28793958">
+                            <script src="https://public.flourish.studio/resources/embed.js"></script>
+                            <noscript><img src="https://public.flourish.studio/visualisation/28793958/thumbnail" width="100%" alt="radar visualization"></noscript>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="append-panel append-theme-light" id="append-coral-garden-section" aria-label="Coral Breath interactive 3D garden">
+                <div id="append-coral-react-root" class="append-coral-garden-mount"></div>
+            </section>
+
+            <section id="append-credit-section" class="append-panel bg-[#F5F5F5] flex flex-col p-12 md:p-24 overflow-hidden relative" aria-label="Epilogue">
+                <!-- Header Text (Smaller fonts, top aligned) -->
+                <div class="flex-shrink-0 max-w-2xl mb-12">
+                    <h2 class="tw-ignore-append-h2 font-serif italic text-6xl md:text-8xl font-light text-[#141414] mb-8">Epilogue</h2>
+
+                    <div class="space-y-6">
+                        <div class="border-l-2 border-[#0A3A8A] pl-8">
+                            <p class="font-sans font-extralight text-lg text-[#4a4a4a] leading-relaxed tracking-wide">
+                                When coral is seen, the ocean can finally be heard.<br>
+                                When data is felt, action follows.
+                            </p>
+                        </div>
+                        <p class="font-sans font-light text-base text-[#6e6e6e] leading-relaxed max-w-md">
+                            This is not an ending but a shift in how we watch—from looking at the sea to helping guard it.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Horizontal Automatic Scrolling Photo Wall -->
+                <div class="flex-1 flex items-center relative overflow-hidden">
+                    <div class="marquee-track gap-10 py-10" id="photo-wall">
+                        <!-- Original Set -->
+                        <div class="flex-shrink-0 photo-card -rotate-2">
+                            <img src="https://images.unsplash.com/photo-1546026423-cc4642628d2b?auto=format&fit=crop&q=80&w=800" class="w-full h-44 object-cover pointer-events-none" alt="">
+                        </div>
+                        <div class="flex-shrink-0 photo-card rotate-1">
+                            <img src="https://images.unsplash.com/photo-1544552866-d3ed42536cfd?auto=format&fit=crop&q=80&w=800" class="w-full h-44 object-cover pointer-events-none" alt="">
+                        </div>
+                        <div class="flex-shrink-0 photo-card -rotate-1">
+                            <img src="https://raw.githubusercontent.com/15315571426/coral-images/c92594ed8f03573a144175770e3a04edfa85e5d5/1.jpg" class="w-full h-44 object-cover pointer-events-none" alt="">
+                        </div>
+                        <div class="flex-shrink-0 photo-card rotate-2">
+                            <img src="https://raw.githubusercontent.com/15315571426/coral-images/c92594ed8f03573a144175770e3a04edfa85e5d5/2.jpg" class="w-full h-44 object-cover pointer-events-none" alt="">
+                        </div>
+                        <div class="flex-shrink-0 photo-card -rotate-3">
+                            <img src="https://raw.githubusercontent.com/15315571426/coral-images/c92594ed8f03573a144175770e3a04edfa85e5d5/3.jpg" class="w-full h-44 object-cover pointer-events-none" alt="">
+                        </div>
+                        <div class="flex-shrink-0 photo-card rotate-1">
+                            <img src="https://raw.githubusercontent.com/15315571426/coral-images/c92594ed8f03573a144175770e3a04edfa85e5d5/4.jpg" class="w-full h-44 object-cover pointer-events-none" alt="">
+                        </div>
+                        <div class="flex-shrink-0 photo-card -rotate-2">
+                            <img src="https://raw.githubusercontent.com/15315571426/coral-images/c92594ed8f03573a144175770e3a04edfa85e5d5/5.jpg" class="w-full h-44 object-cover pointer-events-none" alt="">
+                        </div>
+                        <div class="flex-shrink-0 photo-card -rotate-1">
+                            <img src="https://raw.githubusercontent.com/15315571426/coral-images/c92594ed8f03573a144175770e3a04edfa85e5d5/7.png" class="w-full h-44 object-cover pointer-events-none" alt="">
+                        </div>
+                        <!-- Duplicated Set for Loop -->
+                        <div class="flex-shrink-0 photo-card -rotate-2">
+                            <img src="https://images.unsplash.com/photo-1546026423-cc4642628d2b?auto=format&fit=crop&q=80&w=800" class="w-full h-44 object-cover pointer-events-none" alt="">
+                        </div>
+                        <div class="flex-shrink-0 photo-card rotate-1">
+                            <img src="https://images.unsplash.com/photo-1544552866-d3ed42536cfd?auto=format&fit=crop&q=80&w=800" class="w-full h-44 object-cover pointer-events-none" alt="">
+                        </div>
+                        <div class="flex-shrink-0 photo-card -rotate-1">
+                            <img src="https://raw.githubusercontent.com/15315571426/coral-images/c92594ed8f03573a144175770e3a04edfa85e5d5/1.jpg" class="w-full h-44 object-cover pointer-events-none" alt="">
+                        </div>
+                        <div class="flex-shrink-0 photo-card rotate-2">
+                            <img src="https://raw.githubusercontent.com/15315571426/coral-images/c92594ed8f03573a144175770e3a04edfa85e5d5/2.jpg" class="w-full h-44 object-cover pointer-events-none" alt="">
+                        </div>
+                        <div class="flex-shrink-0 photo-card -rotate-3">
+                            <img src="https://raw.githubusercontent.com/15315571426/coral-images/c92594ed8f03573a144175770e3a04edfa85e5d5/3.jpg" class="w-full h-44 object-cover pointer-events-none" alt="">
+                        </div>
+                        <div class="flex-shrink-0 photo-card rotate-1">
+                            <img src="https://raw.githubusercontent.com/15315571426/coral-images/c92594ed8f03573a144175770e3a04edfa85e5d5/4.jpg" class="w-full h-44 object-cover pointer-events-none" alt="">
+                        </div>
+                        <div class="flex-shrink-0 photo-card -rotate-2">
+                            <img src="https://raw.githubusercontent.com/15315571426/coral-images/c92594ed8f03573a144175770e3a04edfa85e5d5/5.jpg" class="w-full h-44 object-cover pointer-events-none" alt="">
+                        </div>
+                        <div class="flex-shrink-0 photo-card -rotate-1">
+                            <img src="https://raw.githubusercontent.com/15315571426/coral-images/c92594ed8f03573a144175770e3a04edfa85e5d5/7.png" class="w-full h-44 object-cover pointer-events-none" alt="">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Credits Footer -->
+                <div class="flex-shrink-0 mt-8 flex justify-between items-end border-t border-black/5 pt-8">
+                    <div class="space-y-1">
+                        <p class="text-[10px] uppercase tracking-[0.2em] text-[#999]">Graduation thesis · Interaction design · Coral reef visualization</p>
+                        <p class="text-[10px] uppercase tracking-[0.2em] text-[#999]">© 2026 Coral Data Art Project · THE OCEAN'S HEARTBEAT</p>
+                    </div>
+                    <div class="text-[10px] uppercase tracking-widest text-[#aaa]">
+                        For marine ecological protection
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- 必须放在 #append-root 外：根节点 overflow:hidden 会裁切 fixed 子元素，导致 Tooltip 不可见 -->
+    <div class="append-tooltip" id="append-tooltip" aria-live="polite"></div>
+
+    <script>
+        (() => {
+            const root = document.getElementById('append-root');
+            const tooltip = document.getElementById('append-tooltip');
+            if (!root || !tooltip) return;
+
+            /** pickColor 与图例色块一致，用于 canvas 拾色匹配分区（抗锯齿/压缩可微调 MATCH_THRESH） */
+            const ATLAS_REGIONS = [
+                { name: "Andaman Sea", coralArea: "1,850 km²", risk: "Medium Risk", healthyPct: "32%", pickColor: "#91B262" },
+                { name: "Timor & Arafura Seas", coralArea: "2,100 km²", risk: "Medium-High Risk", healthyPct: "25%", pickColor: "#7F59E0" },
+                { name: "Central Indian Ocean", coralArea: "950 km²", risk: "High Risk", healthyPct: "18%", pickColor: "#448FAF" },
+                { name: "Coral Sea", coralArea: "3,200 km²", risk: "Medium Risk", healthyPct: "40%", pickColor: "#F2EE83" },
+                { name: "Southwestern Pacific", coralArea: "2,800 km²", risk: "Medium-High Risk", healthyPct: "22%", pickColor: "#F4A4D1" },
+                { name: "GBR & Torres Strait", coralArea: "34,800 km²", risk: "Very High Risk", healthyPct: "35%", pickColor: "#78EBDC" },
+                { name: "Gulf of Aden", coralArea: "420 km²", risk: "Medium Risk", healthyPct: "15%", pickColor: "#494882" },
+                { name: "Mesoamerica", coralArea: "1,600 km²", risk: "High Risk", healthyPct: "28%", pickColor: "#8DCCDD" },
+                { name: "Hawaiian Islands", coralArea: "1,200 km²", risk: "Medium Risk", healthyPct: "45%", pickColor: "#A84144" },
+                { name: "Southern Asia", coralArea: "2,600 km²", risk: "High Risk", healthyPct: "19%", pickColor: "#D57F80" },
+                { name: "Southeast Asian Archipelago", coralArea: "45,000 km²", risk: "High Risk", healthyPct: "12%", pickColor: "#383292" },
+                { name: "Eastern Micronesia", coralArea: "1,100 km²", risk: "Medium Risk", healthyPct: "20%", pickColor: "#61B345" },
+                { name: "Western Micronesia", coralArea: "1,300 km²", risk: "Medium Risk", healthyPct: "25%", pickColor: "#F28E5D" },
+                { name: "Eastern Africa & Madagascar", coralArea: "3,500 km²", risk: "Medium-High Risk", healthyPct: "18%", pickColor: "#8A673F" },
+                { name: "Western Australia", coralArea: "2,200 km²", risk: "Medium Risk", healthyPct: "30%", pickColor: "#935F82" },
+                { name: "Northern Caribbean & Bahamas", coralArea: "2,500 km²", risk: "High Risk", healthyPct: "22%", pickColor: "#B877D5" },
+                { name: "Southeastern Asia", coralArea: "5,200 km²", risk: "Very High Risk", healthyPct: "10%", pickColor: "#D65C79" },
+                { name: "Eastern PNG & Solomons Islands", coralArea: "4,100 km²", risk: "Medium-High Risk", healthyPct: "15%", pickColor: "#F7BD95" },
+                { name: "Northwestern Arabian Sea", coralArea: "380 km²", risk: "Medium Risk", healthyPct: "20%", pickColor: "#C68D66" },
+                { name: "Philippines", coralArea: "2,300 km²", risk: "Very High Risk", healthyPct: "8%", pickColor: "#6B93D1" },
+                { name: "Red Sea", coralArea: "1,700 km²", risk: "Low Risk", healthyPct: "38%", pickColor: "#A5DAF9" },
+                { name: "Western Indian Ocean", coralArea: "2,600 km²", risk: "Medium-High Risk", healthyPct: "22%", pickColor: "#7A5A41" },
+                { name: "South China Sea", coralArea: "1,900 km²", risk: "High Risk", healthyPct: "10%", pickColor: "#A97A47" },
+                { name: "Southeastern Caribbean", coralArea: "1,800 km²", risk: "High Risk", healthyPct: "24%", pickColor: "#B15A98" },
+                { name: "Subtropical Eastern Australia", coralArea: "1,450 km²", risk: "Medium Risk", healthyPct: "33%", pickColor: "#99C17B" },
+                { name: "Northeastern Asia", coralArea: "780 km²", risk: "Medium Risk", healthyPct: "29%", pickColor: "#DF8B52" },
+                { name: "Tropical Eastern Pacific", coralArea: "850 km²", risk: "High Risk", healthyPct: "25%", pickColor: "#7297D6" },
+                { name: "Central South Pacific", coralArea: "1,680 km²", risk: "Medium-High Risk", healthyPct: "26%", pickColor: "#A57CEB" },
+                { name: "Small reefs or low coral areas", coralArea: "< 500 km²", risk: "Medium Risk", healthyPct: "15%", pickColor: "#CCCCCC" }
+            ];
+
+            const NS = "http://www.w3.org/2000/svg";
+            const q = (id) => root.querySelector('#' + id);
+
+            const createSVG = (tag, attrs = {}) => {
+                const el = document.createElementNS(NS, tag);
+                Object.entries(attrs).forEach(([k, v]) => el.setAttribute(k, v));
+                return el;
+            };
+            const showTip = (e, text) => {
+                tooltip.classList.remove("append-tooltip--atlas");
+                tooltip.innerHTML = text;
+                tooltip.style.left = e.clientX + "px";
+                tooltip.style.top = e.clientY + "px";
+                tooltip.classList.add("show");
+            };
+            const hideTip = () => tooltip.classList.remove("show", "append-tooltip--atlas");
+
+            function atlasRiskClass(risk) {
+                const t = risk.toLowerCase();
+                if (t.includes("very high")) return "append-atlas-risk-vh";
+                if (t.includes("medium-high")) return "append-atlas-risk-mh";
+                if (t.includes("high")) return "append-atlas-risk-h";
+                if (t.includes("low")) return "append-atlas-risk-l";
+                return "append-atlas-risk-m";
+            }
+
+            function coverPointToNatural(px, py, W, H, nw, nh) {
+                const ir = nw / nh;
+                const cr = W / H;
+                let scale, ox, oy;
+                if (ir > cr) {
+                    scale = H / nh;
+                    ox = (W - nw * scale) / 2;
+                    oy = 0;
+                } else {
+                    scale = W / nw;
+                    ox = 0;
+                    oy = (H - nh * scale) / 2;
+                }
+                const nx = (px - ox) / scale;
+                const ny = (py - oy) / scale;
+                if (nx < 0 || ny < 0 || nx >= nw || ny >= nh) return null;
+                return { nx, ny };
+            }
+
+            function nearestAtlasRegionIndex(rgb, atlasRgbList) {
+                let best = -1;
+                let bestSq = Infinity;
+                for (let i = 0; i < atlasRgbList.length; i++) {
+                    const c = atlasRgbList[i];
+                    const d = (rgb[0] - c[0]) ** 2 + (rgb[1] - c[1]) ** 2 + (rgb[2] - c[2]) ** 2;
+                    if (d < bestSq) {
+                        bestSq = d;
+                        best = i;
+                    }
+                }
+                const MATCH_THRESH = 130;
+                if (best < 0 || Math.sqrt(bestSq) > MATCH_THRESH) return -1;
+                return best;
+            }
+
+            function clampAtlasTooltip(clientX, clientY) {
+                const pad = 12;
+                const r = tooltip.getBoundingClientRect();
+                let dx = 0;
+                let dy = 0;
+                if (r.right > window.innerWidth - pad) dx = window.innerWidth - pad - r.right;
+                if (r.left + dx < pad) dx = pad - r.left;
+                if (r.top + dy < pad) dy = pad - r.top;
+                if (r.bottom + dy > window.innerHeight - pad) dy = window.innerHeight - pad - r.bottom;
+                if (dx !== 0 || dy !== 0) {
+                    tooltip.style.left = (clientX + dx) + "px";
+                    tooltip.style.top = (clientY + dy) + "px";
+                }
+            }
+
+            function showAtlasTip(e, region) {
+                const rc = atlasRiskClass(region.risk);
+                tooltip.classList.add("append-tooltip--atlas");
+                tooltip.innerHTML =
+                    '<strong class="append-atlas-name">' + region.name.replace(/</g, "&lt;") + "</strong>" +
+                    '<span class="append-atlas-row"><span class="append-atlas-label">Coral area</span>' + region.coralArea + "</span>" +
+                    '<span class="append-atlas-row"><span class="append-atlas-label">Risk</span><span class="' + rc + '">' + region.risk + "</span></span>" +
+                    '<span class="append-atlas-row"><span class="append-atlas-label">Healthy coral</span>' + region.healthyPct + "</span>";
+                tooltip.style.left = e.clientX + "px";
+                tooltip.style.top = e.clientY + "px";
+                tooltip.classList.add("show");
+                requestAnimationFrame(() => {
+                    clampAtlasTooltip(e.clientX, e.clientY);
+                });
+            }
+
+            function bindLegendAtlasTips() {
+                const items = root.querySelectorAll(".append-region-item");
+                items.forEach((li, i) => {
+                    if (i >= ATLAS_REGIONS.length) return;
+                    li.addEventListener("mouseenter", (e) => showAtlasTip(e, ATLAS_REGIONS[i]));
+                    li.addEventListener("mousemove", (e) => {
+                        if (!tooltip.classList.contains("append-tooltip--atlas")) return;
+                        tooltip.style.left = e.clientX + "px";
+                        tooltip.style.top = e.clientY + "px";
+                        requestAnimationFrame(() => clampAtlasTooltip(e.clientX, e.clientY));
+                    });
+                    li.addEventListener("mouseleave", hideTip);
+                });
+            }
+
+            function initAtlasMapTooltips() {
+                const wrap = root.querySelector(".append-map-interactive");
+                const img = root.querySelector(".append-map-image");
+                if (!wrap || !img) {
+                    bindLegendAtlasTips();
+                    return;
+                }
+
+                const atlasRgbList = ATLAS_REGIONS.map((reg) => {
+                    const n = parseInt(reg.pickColor.slice(1), 16);
+                    return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+                });
+
+                const pickCanvas = document.createElement("canvas");
+                const pickCtx = pickCanvas.getContext("2d", { willReadFrequently: true });
+
+                function fillPickBuffer() {
+                    const nw = img.naturalWidth;
+                    const nh = img.naturalHeight;
+                    if (!nw || !nh) return false;
+                    pickCanvas.width = nw;
+                    pickCanvas.height = nh;
+                    pickCtx.drawImage(img, 0, 0);
+                    return true;
+                }
+
+                function canReadPickBuffer() {
+                    try {
+                        pickCtx.getImageData(0, 0, 1, 1);
+                        return true;
+                    } catch {
+                        return false;
+                    }
+                }
+
+                let lastIdx = -1;
+
+                function onMove(e) {
+                    if (!pickCanvas.width) return;
+                    const rect = img.getBoundingClientRect();
+                    const px = e.clientX - rect.left;
+                    const py = e.clientY - rect.top;
+                    const pt = coverPointToNatural(px, py, rect.width, rect.height, img.naturalWidth, img.naturalHeight);
+                    if (!pt) {
+                        lastIdx = -1;
+                        hideTip();
+                        return;
+                    }
+                    const ix = Math.max(0, Math.min(pickCanvas.width - 1, Math.floor(pt.nx)));
+                    const iy = Math.max(0, Math.min(pickCanvas.height - 1, Math.floor(pt.ny)));
+                    let data;
+                    try {
+                        data = pickCtx.getImageData(ix, iy, 1, 1).data;
+                    } catch {
+                        lastIdx = -1;
+                        hideTip();
+                        return;
+                    }
+                    const idx = nearestAtlasRegionIndex([data[0], data[1], data[2]], atlasRgbList);
+                    if (idx < 0) {
+                        lastIdx = -1;
+                        hideTip();
+                        return;
+                    }
+                    if (idx === lastIdx) {
+                        tooltip.style.left = e.clientX + "px";
+                        tooltip.style.top = e.clientY + "px";
+                        requestAnimationFrame(() => clampAtlasTooltip(e.clientX, e.clientY));
+                        return;
+                    }
+                    lastIdx = idx;
+                    showAtlasTip(e, ATLAS_REGIONS[idx]);
+                }
+
+                function startMapPickMode() {
+                    wrap.addEventListener("mousemove", onMove);
+                    wrap.addEventListener("mouseleave", () => {
+                        lastIdx = -1;
+                        hideTip();
+                    });
+                }
+
+                async function onReady() {
+                    try {
+                        if (img.decode) await img.decode();
+                    } catch {
+                        /* decode 失败仍尝试 draw */
+                    }
+                    if (!fillPickBuffer()) {
+                        bindLegendAtlasTips();
+                        return;
+                    }
+                    if (!canReadPickBuffer()) {
+                        /* file:// 等环境下 canvas 被污染，无法读像素；图例悬停仍可查看数据 */
+                        bindLegendAtlasTips();
+                        return;
+                    }
+                    startMapPickMode();
+                    /* 图例同步支持悬停（与地图拾色一致） */
+                    bindLegendAtlasTips();
+                }
+
+                if (img.complete && img.naturalWidth) onReady();
+                else img.addEventListener("load", () => { onReady(); }, { once: true });
+            }
+
+            initAtlasMapTooltips();
+
+            // 追加区背景粒子
+            const canvas = q('append-bg-canvas');
+            const ctx = canvas.getContext('2d'); // 获取2D绘图上下文
+            let w = 0, h = 0, mx = 0, my = 0;
+            const particles = [];
+            function resize() {
+                const rect = root.getBoundingClientRect();
+                w = root.clientWidth;
+                h = root.scrollHeight;
+                canvas.width = w;
+                canvas.height = h;
+                if (!particles.length) {
+                    const count = Math.min(220, Math.floor((w * Math.min(window.innerHeight, 1200)) / 9000));
+                    for (let i = 0; i < count; i++) {
+                        particles.push({ x: Math.random() * w, y: Math.random() * h, z: Math.random() * 1.2 + 0.2, r: Math.random() * 1.8 + 0.2, vx: (Math.random() - 0.5) * 0.26, vy: (Math.random() - 0.5) * 0.26 });
+                    }
+                }
+            }
+            resize();
+            window.addEventListener('resize', resize);
+            window.addEventListener('mousemove', (e) => {
+                const r = root.getBoundingClientRect();
+                mx = e.clientX - r.left;
+                my = e.clientY - r.top + window.scrollY - (r.top + window.scrollY);
+            });
+            function drawBg() {
+                ctx.clearRect(0, 0, w, h);
+                const grad = ctx.createRadialGradient(mx || w/2, my || window.scrollY + window.innerHeight/2, 20, w * 0.5, window.scrollY + window.innerHeight * 0.5, Math.max(w, h));
+                grad.addColorStop(0, "rgba(10,58,138,0.06)");
+                grad.addColorStop(1, "rgba(242,242,242,0)");
+                ctx.fillStyle = grad;
+                ctx.fillRect(0, 0, w, h);
+                for (const p of particles) {
+                    p.x += p.vx * p.z;
+                    p.y += p.vy * p.z;
+                    if (p.x < -5) p.x = w + 5;
+                    if (p.x > w + 5) p.x = -5;
+                    if (p.y < -5) p.y = h + 5;
+                    if (p.y > h + 5) p.y = -5;
+                    const dx = ((mx || w/2) - p.x) * 0.00003;
+                    const dy = (((my || (window.scrollY + window.innerHeight/2))) - p.y) * 0.00003;
+                    p.vx = (p.vx + dx) * 0.992;
+                    p.vy = (p.vy + dy) * 0.992;
+                    ctx.beginPath(); // 开始路径
+                    ctx.fillStyle = `rgba(20,20,20,${0.035 + p.z * 0.055})`;
+                    ctx.arc(p.x, p.y, p.r * p.z, 0, Math.PI * 2);
+                    ctx.fill(); // 填充路径
+                }
+                requestAnimationFrame(drawBg);
+            }
+            drawBg();
+        })();
+
+        // ===================== 全屏分页滚动（PPT翻页） =====================
+        (() => {
+            const pages = [
+                ...document.querySelectorAll('.chapter'),
+                ...document.querySelectorAll('#append-root .append-panel')
+            ];
+            if (!pages.length) return;
+
+            let current = 0;
+            let locked = false;
+            let touchStartY = 0;
+            let wheelAccum = 0;
+            let wheelDirection = 0;
+            let lastWheelAt = 0;
+            let lastPageNavAt = 0;
+            const globalNav = document.getElementById('global-thesis-nav');
+
+            function syncPastCover(pageIndex) {
+                document.body.classList.toggle('past-cover', pageIndex > 0);
+                if (globalNav) {
+                    globalNav.setAttribute('aria-hidden', pageIndex > 0 ? 'false' : 'true');
+                }
+            }
+
+            function clamp(v, min, max) {
+                return Math.max(min, Math.min(max, v));
+            }
+
+            function nearestPageIndex() {
+                const y = window.scrollY;
+                let best = 0;
+                let dist = Infinity;
+                pages.forEach((el, idx) => {
+                    // offsetTop 相对 offsetParent；附录 .append-panel 嵌套在 #append-root 内，
+                    // 不能与 scrollY 直接比较，否则会误判当前页并出现「一跳多页」。
+                    const docTop = el.getBoundingClientRect().top + window.scrollY;
+                    const d = Math.abs(docTop - y);
+                    if (d < dist) {
+                        dist = d;
+                        best = idx;
+                    }
+                });
+                return best;
+            }
+
+            function goToPage(index) {
+                const target = clamp(index, 0, pages.length - 1);
+                if (target === current && locked) return;
+                current = target;
+                lastPageNavAt = performance.now();
+                syncPastCover(current);
+                locked = true;
+                pages[current].scrollIntoView({ behavior: 'smooth', block: 'start' });
+                window.setTimeout(() => {
+                    locked = false;
+                    wheelAccum = 0;
+                    wheelDirection = 0;
+                }, 820);
+            }
+
+            function isEditableTarget(el) {
+                if (!el) return false;
+                const editable = el.closest('input, textarea, select, [contenteditable="true"], [contenteditable=""], .journal-area');
+                return !!editable;
+            }
+
+            // 初始吸附到最近页，避免加载时落在两页之间
+            window.setTimeout(() => {
+                current = nearestPageIndex();
+                syncPastCover(current);
+                goToPage(current);
+            }, 60);
+
+            window.addEventListener('wheel', (e) => {
+                if (isEditableTarget(e.target)) return;
+                e.preventDefault();
+                if (locked) return;
+                if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
+
+                const now = performance.now();
+                // 防止触控板惯性在一次翻页后继续触发多页连跳
+                if (now - lastPageNavAt < 920) return;
+
+                // 方向兼容：在部分设备/驱动下 deltaY 与 wheelDelta 符号可能表现不一致
+                let delta = e.deltaY;
+                if (typeof e.wheelDelta === 'number' && e.wheelDelta !== 0) {
+                    const wheelDeltaNormalized = -e.wheelDelta;
+                    if (Math.sign(wheelDeltaNormalized) !== Math.sign(delta)) {
+                        delta = wheelDeltaNormalized;
+                    }
+                }
+
+                // 连续滚轮有明显时间间隔时，重置累积，避免旧手势污染新方向
+                if (now - lastWheelAt > 140) {
+                    wheelAccum = 0;
+                    wheelDirection = 0;
+                }
+                lastWheelAt = now;
+
+                const dir = delta > 0 ? 1 : -1;
+                if (wheelDirection !== 0 && dir !== wheelDirection) {
+                    // 方向切换时清空历史累积，避免“上滑却触发下翻”
+                    wheelAccum = 0;
+                }
+                wheelDirection = dir;
+                wheelAccum += Math.abs(delta);
+                if (wheelAccum < 64) return;
+                current = nearestPageIndex();
+                if (wheelDirection > 0) goToPage(current + 1);
+                else goToPage(current - 1);
+                wheelAccum = 0;
+                wheelDirection = 0;
+            }, { passive: false });
+
+            window.addEventListener('keydown', (e) => {
+                if (locked) return;
+                wheelAccum = 0;
+                wheelDirection = 0;
+                current = nearestPageIndex();
+                if (e.key === 'ArrowDown' || e.key === 'PageDown' || e.key === ' ') {
+                    e.preventDefault();
+                    goToPage(current + 1);
+                } else if (e.key === 'ArrowUp' || e.key === 'PageUp') {
+                    e.preventDefault();
+                    goToPage(current - 1);
+                }
+            });
+
+            window.addEventListener('touchstart', (e) => {
+                touchStartY = e.touches[0].clientY;
+            }, { passive: true });
+
+            window.addEventListener('touchend', (e) => {
+                if (locked) return;
+                wheelAccum = 0;
+                wheelDirection = 0;
+                const dy = touchStartY - e.changedTouches[0].clientY;
+                if (Math.abs(dy) < 28) return;
+                current = nearestPageIndex();
+                if (dy > 0) goToPage(current + 1);
+                else goToPage(current - 1); 
+            }, { passive: true });
+
+            window.addEventListener('scrollend', () => {
+                wheelAccum = 0;
+                wheelDirection = 0;
+            }, { passive: true });
+        })();
+    </script>
+    <!-- Coral Breath 内嵌：THREE 已由上方 r145 + OrbitControls 提供 -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script type="text/babel">
+        const { useEffect, useRef, useState } = React;
+
+        const CORAL_GARDEN_COLORS = {
+            bg: '#f2f2f2',
+            text: '#333333',
+            accent: '#1A4B8C'
+        };
+
+        const CoralGardenAnimState = {
+            IDLE: 'IDLE',
+            HOLDING: 'HOLDING',
+            GROWING: 'GROWING',
+            GARDEN: 'GARDEN'
+        };
+
+        const CORAL_GARDEN_DATA = [
+            {
+                nameEn: 'Hermatype Coral',
+                subName: 'Reef-building Coral',
+                desc: 'The "builder" of the ocean. Secretes calcium carbonate to form massive, resilient coral reefs over centuries.',
+                img: 'https://raw.githubusercontent.com/15315571426/coral-images/main/1造礁珊瑚.png'
+            },
+            {
+                nameEn: 'Soft Coral',
+                subName: 'Alcyonacea',
+                desc: 'Flexible, vibrant, and skeleton-free. Thrives in tropical oceans with gentle water movement.',
+                img: 'https://raw.githubusercontent.com/15315571426/coral-images/main/2软珊瑚.png'
+            },
+            {
+                nameEn: 'Gorgonia',
+                subName: 'Sea Fan',
+                desc: 'Fan-shaped deep-sea coral with delicate branches, known for its elegant, rhythmic swaying motion.',
+                img: 'https://raw.githubusercontent.com/15315571426/coral-images/main/3柳珊瑚.png'
+            },
+            {
+                nameEn: 'Madrepore',
+                subName: 'Stony Coral',
+                desc: 'The primary architect of coral reefs. Hard, rigid calcium carbonate skeleton forms the foundation of marine ecosystems.',
+                img: 'https://raw.githubusercontent.com/15315571426/coral-images/main/4石珊瑚.png'
+            },
+            {
+                nameEn: 'Meandrina',
+                subName: 'Brain Coral',
+                desc: 'Named for its brain-like surface grooves. Long-lived, sturdy, and critical to reef structure.',
+                img: 'https://raw.githubusercontent.com/15315571426/coral-images/main/5脑珊瑚.png'
+            },
+            {
+                nameEn: 'Plerocera',
+                subName: 'Plate Coral',
+                desc: 'Flat, wide, and table-like shape. Efficient at capturing sunlight in shallow, calm marine environments.',
+                img: 'https://raw.githubusercontent.com/15315571426/coral-images/main/6盘珊瑚.png'
+            },
+            {
+                nameEn: 'Zoanthid',
+                subName: 'Button Coral',
+                desc: 'Small, colorful, and highly toxic. Forms dense colonies on rocks and reef substrates.',
+                img: 'https://raw.githubusercontent.com/15315571426/coral-images/main/7纽扣珊瑚.png'
+            },
+            {
+                nameEn: 'Bubble Coral',
+                subName: 'Plerogyra Sinuosa',
+                desc: 'Inflates into translucent bubbles during the day; extends tentacles to feed at night. Venomous but visually striking.',
+                img: 'https://raw.githubusercontent.com/15315571426/coral-images/main/8气泡珊瑚.png'
+            },
+            {
+                nameEn: 'Elegance Coral',
+                subName: 'Nile Coral',
+                desc: 'Catches prey with long tentacles. Endangered due to coral bleaching; protected in many regions.',
+                img: 'https://raw.githubusercontent.com/15315571426/coral-images/main/9尼罗河珊瑚.png'
+            }
+        ];
+
+        function CoralGardenApp() {
+            const containerRef = useRef(null);
+            const hoveredCoralRef = useRef(null);
+            const hoveredTypeIdxRef = useRef(null);
+            const [currentStatus, setCurrentStatus] = useState('Hold to watch the reef come alive.');
+            const [holdProgress, setHoldProgress] = useState(0);
+            const [isHolding, setIsHolding] = useState(false);
+            const [hoveredTypeIdx, setHoveredTypeIdx] = useState(null);
+            const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
+            const [animState, setAnimState] = useState(CoralGardenAnimState.IDLE);
+
+            useEffect(() => {
+                if (!containerRef.current) return;
+
+                let cancelled = false;
+
+                const readContainerSize = () => {
+                    const el = containerRef.current;
+                    if (!el) return null;
+                    const r = el.getBoundingClientRect();
+                    const w = Math.max(1, Math.floor(r.width));
+                    const h = Math.max(1, Math.floor(r.height));
+                    return { width: w, height: h };
+                };
+
+                const size0 = readContainerSize();
+                if (!size0) return;
+
+                let width = size0.width;
+                let height = size0.height;
+
+                const scene = new THREE.Scene();
+                scene.background = new THREE.Color(CORAL_GARDEN_COLORS.bg);
+
+                const aspect = width / height;
+                const d = 550;
+                const camera = new THREE.OrthographicCamera(-d * aspect, d * aspect, d, -d, 1, 4000);
+                camera.position.set(800, 653, 800);
+                camera.lookAt(0, 0, 0);
+
+                const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+                containerRef.current.appendChild(renderer.domElement);
+
+                const scaleLerpTarget = new THREE.Vector3();
+
+                const controls = new THREE.OrbitControls(camera, renderer.domElement);
+                controls.enableDamping = true;
+                controls.enabled = false;
+                controls.autoRotate = false;
+                controls.minZoom = 0.12;
+
+                const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
+                scene.add(ambientLight);
+                const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
+                directionalLight.position.set(100, 200, 100);
+                scene.add(directionalLight);
+
+                const particleCount = 1500;
+                const particleGeometry = new THREE.BufferGeometry();
+                const posArray = new Float32Array(particleCount * 3);
+                const colorArray = new Float32Array(particleCount * 3);
+                const targetPoolArray = new Float32Array(particleCount * 3);
+
+                const BLUE_PALETTE = [
+                    new THREE.Color('#1A4B8C'),
+                    new THREE.Color('#5B91D6'),
+                    new THREE.Color('#8BB4E8')
+                ];
+
+                for (let i = 0; i < particleCount; i++) {
+                    posArray[i * 3] = (Math.random() - 0.5) * 150;
+                    posArray[i * 3 + 1] = (Math.random() - 0.5) * 150;
+                    posArray[i * 3 + 2] = (Math.random() - 0.5) * 150;
+                    const color = BLUE_PALETTE[Math.floor(Math.random() * BLUE_PALETTE.length)];
+                    colorArray[i * 3] = color.r;
+                    colorArray[i * 3 + 1] = color.g;
+                    colorArray[i * 3 + 2] = color.b;
+                }
+
+                particleGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+                particleGeometry.setAttribute('color', new THREE.BufferAttribute(colorArray, 3));
+
+                const particleMaterial = new THREE.PointsMaterial({
+                    size: 3,
+                    vertexColors: true,
+                    transparent: true,
+                    opacity: 0.8,
+                    depthWrite: false,
+                    sizeAttenuation: true
+                });
+                const particleSystem = new THREE.Points(particleGeometry, particleMaterial);
+                scene.add(particleSystem);
+
+                const coralMeshes = [];
+                const textureLoader = new THREE.TextureLoader();
+                const raycaster = new THREE.Raycaster();
+                const mouse = new THREE.Vector2();
+
+                let loopState = CoralGardenAnimState.IDLE;
+                let holdStartTime = 0;
+                const HOLD_DURATION = 2000;
+
+                const initGarden = () => {
+                    let coralIdx = 0;
+                    CORAL_GARDEN_DATA.forEach((data, typeIdx) => {
+                        const count = 15 + Math.floor(Math.random() * 5);
+                        for (let j = 0; j < count; j++) {
+                            const group = new THREE.Group();
+                            const material = new THREE.MeshBasicMaterial({
+                                color: 0x8bb4e8,
+                                transparent: true,
+                                side: THREE.DoubleSide,
+                                alphaTest: 0.1,
+                                opacity: 0,
+                                depthWrite: true
+                            });
+
+                            textureLoader.load(
+                                data.img,
+                                (tex) => {
+                                    if (cancelled) return;
+                                    tex.encoding = THREE.sRGBEncoding;
+                                    material.map = tex;
+                                    material.color.set(0xffffff);
+                                    material.needsUpdate = true;
+                                },
+                                undefined,
+                                () => {}
+                            );
+
+                            const size = 90 + Math.random() * 110;
+                            const geometry = new THREE.PlaneGeometry(size, size);
+                            const mesh = new THREE.Mesh(geometry, material);
+
+                            const centerIdx = typeIdx % 4;
+                            const centerX = ((centerIdx % 2) - 0.5) * 400;
+                            const centerZ = (Math.floor(centerIdx / 2) - 0.5) * 400;
+
+                            const angle = Math.random() * Math.PI * 2;
+                            const dist = Math.sqrt(Math.random()) * 250;
+                            const targetPos = new THREE.Vector3(
+                                centerX + Math.cos(angle) * dist + (Math.random() - 0.5) * 100,
+                                0,
+                                centerZ + Math.sin(angle) * dist + (Math.random() - 0.5) * 100
+                            );
+
+                            group.position.copy(targetPos);
+                            group.rotation.y = Math.PI / 4 + (Math.random() - 0.5) * 0.2;
+                            mesh.position.y = size / 2;
+                            group.add(mesh);
+
+                            group.userData = {
+                                id: typeIdx,
+                                instanceId: coralIdx,
+                                targetPos: targetPos.clone(),
+                                swayOffset: Math.random() * Math.PI * 2,
+                                swaySpeed: 0.8 + Math.random() * 0.4
+                            };
+
+                            group.visible = false;
+                            scene.add(group);
+                            coralMeshes.push(group);
+
+                            const pPerCoral = Math.floor(particleCount / (CORAL_GARDEN_DATA.length * 18));
+                            const startP = Math.min(coralIdx * pPerCoral, particleCount);
+                            const endP = Math.min((coralIdx + 1) * pPerCoral, particleCount);
+
+                            for (let p = startP; p < endP; p++) {
+                                targetPoolArray[p * 3] = targetPos.x + (Math.random() - 0.5) * 60;
+                                targetPoolArray[p * 3 + 1] = Math.random() * 40;
+                                targetPoolArray[p * 3 + 2] = targetPos.z + (Math.random() - 0.5) * 60;
+                            }
+                            coralIdx++;
+                        }
+                    });
+                };
+
+                initGarden();
+
+                let tooltipMoveRaf = 0;
+                let pendingTooltip = null;
+
+                const onMouseMove = (event) => {
+                    const rect = renderer.domElement.getBoundingClientRect();
+                    mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+                    mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+                    pendingTooltip = { x: event.clientX, y: event.clientY };
+                    if (!tooltipMoveRaf) {
+                        tooltipMoveRaf = requestAnimationFrame(() => {
+                            tooltipMoveRaf = 0;
+                            if (pendingTooltip && !cancelled) setTooltipPos(pendingTooltip);
+                        });
+                    }
+                };
+
+                const sceneGardenLiftPx = () => {
+                    let fhdBonus = false;
+                    const ww = window.innerWidth;
+                    const hh = window.innerHeight;
+                    if (ww >= 1860 && ww <= 2040 && hh >= 1000 && hh <= 1140) fhdBonus = true;
+                    try {
+                        const sc = typeof window.screen !== 'undefined' ? window.screen : null;
+                        const sw = sc ? sc.width : 0;
+                        const sh = sc ? sc.height : 0;
+                        if (sw >= 1880 && sw <= 1980 && sh >= 1040 && sh <= 1120) fhdBonus = true;
+                    } catch (_) { /* noop */ }
+                    return fhdBonus ? 110 : 72;
+                };
+
+                const applySceneLift = () => {
+                    const liftPx = sceneGardenLiftPx();
+                    const span = camera.top - camera.bottom;
+                    scene.position.y = height > 0 ? (liftPx / height) * span : 0;
+                };
+
+                const applyRendererSize = (w, h) => {
+                    width = w;
+                    height = h;
+                    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+                    renderer.setSize(w, h);
+                    const asp = w / h;
+                    camera.left = -d * asp;
+                    camera.right = d * asp;
+                    camera.top = d;
+                    camera.bottom = -d;
+                    camera.updateProjectionMatrix();
+                    applySceneLift();
+                };
+
+                const ro = typeof ResizeObserver !== 'undefined'
+                    ? new ResizeObserver(() => {
+                        const s = readContainerSize();
+                        if (s) applyRendererSize(s.width, s.height);
+                    })
+                    : null;
+                if (ro && containerRef.current) ro.observe(containerRef.current);
+
+                const onWindowResize = () => {
+                    const s = readContainerSize();
+                    if (s) applyRendererSize(s.width, s.height);
+                };
+
+                applyRendererSize(size0.width, size0.height);
+
+                renderer.domElement.addEventListener('mousemove', onMouseMove);
+                window.addEventListener('resize', onWindowResize);
+
+                let animationFrameId;
+                let lastSyncedAnimState = CoralGardenAnimState.IDLE;
+                let lastHoldProgressBucket = -1;
+
+                const animate = () => {
+                    if (cancelled) return;
+                    animationFrameId = requestAnimationFrame(animate);
+                    const now = performance.now();
+
+                    if (loopState !== lastSyncedAnimState) {
+                        lastSyncedAnimState = loopState;
+                        if (!cancelled) setAnimState(loopState);
+                    }
+
+                    const positions = particleGeometry.attributes.position.array;
+                    if (loopState === CoralGardenAnimState.IDLE || loopState === CoralGardenAnimState.HOLDING) {
+                        particleSystem.visible = true;
+                        const breathScale = loopState === CoralGardenAnimState.HOLDING ? 1.5 : 1.0;
+                        for (let i = 0; i < particleCount; i++) {
+                            const t = now * 0.001 + i * 0.1;
+                            const breath = 1.0 + Math.sin(now * 0.0015) * 0.1 * breathScale;
+                            const targetX = (Math.sin(t * 0.5) * 60) * breath;
+                            const targetY = (Math.cos(t * 0.7) * 60) * breath;
+                            const targetZ = (Math.sin(t * 0.3) * 60) * breath;
+                            positions[i * 3] += (targetX - positions[i * 3]) * 0.02;
+                            positions[i * 3 + 1] += (targetY - positions[i * 3 + 1]) * 0.02;
+                            positions[i * 3 + 2] += (targetZ - positions[i * 3 + 2]) * 0.02;
+                        }
+                        particleMaterial.opacity = loopState === CoralGardenAnimState.HOLDING ? 0.8 + Math.sin(now * 0.01) * 0.2 : 0.6;
+                    } else if (loopState === CoralGardenAnimState.GROWING) {
+                        let arrivedCount = 0;
+                        for (let i = 0; i < particleCount; i++) {
+                            const tx = targetPoolArray[i * 3];
+                            const ty = targetPoolArray[i * 3 + 1];
+                            const tz = targetPoolArray[i * 3 + 2];
+                            positions[i * 3] += (tx - positions[i * 3]) * 0.12;
+                            positions[i * 3 + 1] += (ty - positions[i * 3 + 1]) * 0.12;
+                            positions[i * 3 + 2] += (tz - positions[i * 3 + 2]) * 0.12;
+                            if (Math.abs(positions[i * 3] - tx) < 15) arrivedCount++;
+                        }
+                        if (arrivedCount > particleCount * 0.9) {
+                            loopState = CoralGardenAnimState.GARDEN;
+                            if (camera.zoom < controls.minZoom) {
+                                camera.zoom = controls.minZoom;
+                                camera.updateProjectionMatrix();
+                            }
+                            controls.enabled = true;
+                            if (!cancelled) setCurrentStatus('The reef breathes again. Drag to rotate, hover to explore.');
+                        }
+                    } else {
+                        particleMaterial.opacity *= 0.95;
+                        if (particleMaterial.opacity < 0.01) particleSystem.visible = false;
+                    }
+                    particleGeometry.attributes.position.needsUpdate = true;
+
+                    if (loopState === CoralGardenAnimState.HOLDING) {
+                        const progress = Math.min((now - holdStartTime) / HOLD_DURATION, 1);
+                        const bucket = progress >= 1 ? 100 : Math.floor(progress * 40);
+                        if (bucket !== lastHoldProgressBucket) {
+                            lastHoldProgressBucket = bucket;
+                            if (!cancelled) setHoldProgress(progress);
+                        }
+                        if (progress >= 1) {
+                            loopState = CoralGardenAnimState.GROWING;
+                            lastHoldProgressBucket = -1;
+                            if (!cancelled) {
+                                setIsHolding(false);
+                                setCurrentStatus('Life is weaving its patterns.');
+                            }
+                        }
+                    }
+
+                    coralMeshes.forEach((group) => {
+                        const mesh = group.children[0];
+                        if (!mesh || !mesh.material) return;
+                        const material = mesh.material;
+                        if (loopState === CoralGardenAnimState.GROWING || loopState === CoralGardenAnimState.GARDEN) {
+                            group.visible = true;
+                            if (typeof material.opacity === 'number' && material.opacity < 1) material.opacity += 0.03;
+                            const isHovered = hoveredCoralRef.current === group.userData.instanceId;
+                            const baseScale = isHovered ? 1.3 : 1;
+                            const pulse = loopState === CoralGardenAnimState.GARDEN ? Math.sin(now * 0.001 + group.userData.instanceId) * 0.02 + 1 : 1;
+                            const finalScale = baseScale * pulse;
+                            scaleLerpTarget.set(finalScale, finalScale, finalScale);
+                            group.scale.lerp(scaleLerpTarget, 0.1);
+                        }
+                        if (loopState === CoralGardenAnimState.GARDEN) {
+                            const sway = Math.sin(now * 0.001 * group.userData.swaySpeed + group.userData.swayOffset) * 0.06;
+                            group.rotation.z = sway;
+                            group.position.x = group.userData.targetPos.x + Math.sin(now * 0.0008 + group.userData.swayOffset) * 4;
+                            group.position.y = Math.sin(now * 0.0012 + group.userData.swayOffset) * 3;
+                        }
+                    });
+
+                    if (loopState === CoralGardenAnimState.GARDEN) {
+                        raycaster.setFromCamera(mouse, camera);
+                        const intersects = raycaster.intersectObjects(coralMeshes, true);
+                        if (intersects.length > 0) {
+                            let obj = intersects[0].object;
+                            while (
+                                obj &&
+                                obj.parent &&
+                                !Object.prototype.hasOwnProperty.call(obj.userData || {}, 'id')
+                            ) {
+                                obj = obj.parent;
+                            }
+                            if (obj && Object.prototype.hasOwnProperty.call(obj.userData || {}, 'instanceId')) {
+                                const iid = obj.userData.instanceId;
+                                const tid = obj.userData.id;
+                                hoveredCoralRef.current = iid;
+                                if (hoveredTypeIdxRef.current !== tid) {
+                                    hoveredTypeIdxRef.current = tid;
+                                    if (!cancelled) setHoveredTypeIdx(tid);
+                                }
+                            } else {
+                                hoveredCoralRef.current = null;
+                                if (hoveredTypeIdxRef.current !== null) {
+                                    hoveredTypeIdxRef.current = null;
+                                    if (!cancelled) setHoveredTypeIdx(null);
+                                }
+                            }
+                        } else {
+                            hoveredCoralRef.current = null;
+                            if (hoveredTypeIdxRef.current !== null) {
+                                hoveredTypeIdxRef.current = null;
+                                if (!cancelled) setHoveredTypeIdx(null);
+                            }
+                        }
+                    }
+
+                    controls.update();
+                    renderer.render(scene, camera);
+                };
+
+                animate();
+
+                const handleMouseDown = () => {
+                    if (cancelled || loopState !== CoralGardenAnimState.IDLE) return;
+                    loopState = CoralGardenAnimState.HOLDING;
+                    holdStartTime = performance.now();
+                    lastHoldProgressBucket = -1;
+                    setHoldProgress(0);
+                    setIsHolding(true);
+                    setCurrentStatus('The seeds are awakening...');
+                };
+
+                const handleMouseUp = () => {
+                    if (cancelled || loopState !== CoralGardenAnimState.HOLDING) return;
+                    loopState = CoralGardenAnimState.IDLE;
+                    lastHoldProgressBucket = -1;
+                    setHoldProgress(0);
+                    setIsHolding(false);
+                    setCurrentStatus('Hold to watch the reef come alive.');
+                };
+
+                renderer.domElement.addEventListener('mousedown', handleMouseDown);
+                window.addEventListener('mouseup', handleMouseUp);
+
+                return () => {
+                    cancelled = true;
+                    cancelAnimationFrame(animationFrameId);
+                    if (tooltipMoveRaf) cancelAnimationFrame(tooltipMoveRaf);
+                    renderer.domElement.removeEventListener('mousemove', onMouseMove);
+                    renderer.domElement.removeEventListener('mousedown', handleMouseDown);
+                    window.removeEventListener('mouseup', handleMouseUp);
+                    window.removeEventListener('resize', onWindowResize);
+                    if (ro && containerRef.current) ro.unobserve(containerRef.current);
+                    if (controls && typeof controls.dispose === 'function') controls.dispose();
+                    renderer.dispose();
+                };
+            }, []);
+
+            return (
+                <div className="cg-root">
+                    <div className="cg-overlay-top">Sub-Surface Reconstruction / 04-Coral-Garden</div>
+                    <div ref={containerRef} className="cg-canvas-wrap" />
+                    {hoveredTypeIdx !== null && (
+                        <div
+                            className="cg-tooltip cg-tooltip-fade"
+                            style={{
+                                left: tooltipPos.x + 20,
+                                top: tooltipPos.y - 80,
+                                opacity: 1,
+                                transform: 'translateY(0)'
+                            }}
+                        >
+                            <div className="cg-tooltip-tag">Classification</div>
+                            <div className="cg-tooltip-names-row">
+                                <img
+                                    src={CORAL_GARDEN_DATA[hoveredTypeIdx].img}
+                                    alt=""
+                                    className="cg-tooltip-thumb"
+                                    width={40}
+                                    height={40}
+                                    draggable={false}
+                                />
+                                <div className="cg-tooltip-names-text">
+                                    <h3 className="cg-tooltip-title">{CORAL_GARDEN_DATA[hoveredTypeIdx].nameEn}</h3>
+                                    <span className="cg-tooltip-en cg-mono">{CORAL_GARDEN_DATA[hoveredTypeIdx].subName}</span>
+                                </div>
+                            </div>
+                            <div className="cg-tooltip-rule" />
+                            <p className="cg-tooltip-desc">{CORAL_GARDEN_DATA[hoveredTypeIdx].desc}</p>
+                        </div>
+                    )}
+                    <div className="cg-bottom">
+                        <p className="cg-status">{currentStatus}</p>
+                        <div className="cg-ring-wrap">
+                            <svg width="56" height="56" className="cg-svg-rotate">
+                                <circle cx="28" cy="28" r="26" fill="transparent" stroke="rgba(0,0,0,0.02)" strokeWidth="1" />
+                                <circle
+                                    cx="28"
+                                    cy="28"
+                                    r="26"
+                                    fill="transparent"
+                                    stroke="#1A4B8C"
+                                    strokeWidth="2"
+                                    strokeDasharray={163}
+                                    strokeDashoffset={163 * (1 - holdProgress)}
+                                    className="cg-progress-ring-circle"
+                                    style={{ opacity: isHolding ? 1 : (holdProgress > 0 ? 0.3 : 0) }}
+                                />
+                            </svg>
+                            <div className={isHolding ? 'cg-ring-dot is-holding' : 'cg-ring-dot'} />
+                        </div>
+                    </div>
+                    <div className="cg-meta">
+                        <div>ID: CORL_04_3D</div>
+                        <div>VIEW: ISOMETRIC</div>
+                        <div>STATE: {animState}</div>
+                    </div>
+                </div>
+            );
+        }
+
+        const coralMountEl = document.getElementById('append-coral-react-root');
+        if (coralMountEl && typeof ReactDOM !== 'undefined' && ReactDOM.createRoot) {
+            ReactDOM.createRoot(coralMountEl).render(<CoralGardenApp />);
+        }
+    </script>
+
+    <script>
+        (function () {
+            var root = document.getElementById('page-scroll-progress');
+            if (!root) return;
+            var fill = root.querySelector('.page-scroll-progress__fill');
+            if (!fill) return;
+
+            function update() {
+                var el = document.scrollingElement || document.documentElement;
+                var max = el.scrollHeight - el.clientHeight;
+                var p = max <= 0 ? 0 : el.scrollTop / max;
+                if (p < 0) p = 0;
+                if (p > 1) p = 1;
+                fill.style.transform = 'scaleX(' + p + ')';
+            }
+
+            update();
+            window.addEventListener('scroll', update, { passive: true });
+            window.addEventListener('resize', update, { passive: true });
+        })();
+    </script>
+
+</body>
+</html>
