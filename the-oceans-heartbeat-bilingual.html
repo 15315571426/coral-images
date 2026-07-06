@@ -1,15 +1,18 @@
-<html lang="en">
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="theme-color" content="#f2f2f2">
-    <title>The Modern Renaissance</title>
+    <title>海洋的心跳 · 珊瑚礁可视化</title>
+    <script>try{var _l=localStorage.getItem('oh-lang');if(_l==='en'||_l==='zh')document.documentElement.lang=_l==='zh'?'zh-CN':'en';}catch(e){}</script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="dns-prefetch" href="https://unpkg.com">
     <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
     <link rel="dns-prefetch" href="https://raw.githubusercontent.com">
     <link rel="dns-prefetch" href="https://public.flourish.studio">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="oh-zh-typography.css">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -124,6 +127,40 @@
         @media (max-width: 900px) {
             .global-thesis-meta { display: none; }
             .global-thesis-nav { padding: 1rem 1.25rem; }
+        }
+
+        .lang-toggle {
+            font-family: 'Manrope', sans-serif;
+            font-size: 0.75rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            font-weight: 500;
+            color: var(--text-muted);
+            background: none;
+            border: none;
+            padding: 0 0 4px;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+        .lang-toggle::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 1px;
+            background-color: var(--text-main);
+            transform: translateX(-101%);
+            transition: transform 0.4s cubic-bezier(0.19, 1, 0.22, 1);
+        }
+        .lang-toggle:hover::after { transform: translateX(0); }
+        .nav-links .lang-toggle { color: var(--text-main); }
+        #append-root .append-nav-right .lang-toggle {
+            font-size: 0.75rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--append-muted, #4a4a4a);
         }
 
         /* 章节容器：每个章节占满视口高度（dvh/svh 适配移动浏览器 chrome / 横屏） */
@@ -763,16 +800,18 @@
     </style>
 </head>
 <body>
+    <script src="oh-i18n.js"></script>
     <div id="page-scroll-progress" class="page-scroll-progress" aria-hidden="true">
         <div class="page-scroll-progress__fill"></div>
     </div>
     <!-- 展签顶栏：从第二屏起显示（由 body.past-cover 控制） -->
     <nav id="global-thesis-nav" class="global-thesis-nav" aria-hidden="true">
-        <div class="global-thesis-logo">CORAL REEF · THESIS</div>
+        <div class="global-thesis-logo" data-i18n="nav.logo">CORAL REEF · THESIS</div>
         <div class="global-thesis-meta">
-            <span>Exhibition</span>
-            <span>Data Art</span>
+            <span data-i18n="nav.exhibition">展览</span>
+            <span data-i18n="nav.dataArt">数据艺术</span>
             <span>2026</span>
+            <button type="button" class="lang-toggle">EN</button>
         </div>
     </nav>
 
@@ -783,30 +822,31 @@
 
         <div class="ui-layer">
             <header>
-                <div class="logo">CORAL REEF.</div>
+                <div class="logo" data-i18n="cover.logo">CORAL REEF.</div>
                 <div class="nav-links">
-                    <span class="nav-link">Thesis</span>
-                    <span class="nav-link">Exhibition</span>
-                    <span class="nav-link glitch-hover">Enter</span>
+                    <span class="nav-link" data-i18n="cover.navThesis">论文</span>
+                    <span class="nav-link" data-i18n="cover.navExhibition">展览</span>
+                    <span class="nav-link glitch-hover" data-i18n="cover.navEnter">进入</span>
+                    <button type="button" class="nav-link lang-toggle">EN</button>
                 </div>
             </header>
 
             <main>
                 <div class="content-left" id="parallax-content">
-                    <h1>The Ocean's<br>Heartbeat</h1>
+                    <h1 data-i18n-html="cover.h1Html">海洋的<br>心跳</h1>
                     <div class="subhead-container">
-                        <p class="subhead">How coral reefs build ecosystems and nurture marine life</p>
+                        <p class="subhead" data-i18n="cover.subhead">珊瑚礁如何构筑生态系统，孕育海洋生命</p>
                     </div>
                 </div>
             </main>
 
             <footer>
                 <div class="meta-data">
-                    <span>2026 Thesis Project</span>
-                    <span>Interactive Media Design</span>
+                    <span data-i18n="cover.meta1">2026 毕业设计</span>
+                    <span data-i18n="cover.meta2">交互媒体设计</span>
                 </div>
                 <div class="scroll-indicator" id="scroll-down">
-                    <span>Scroll</span>
+                    <span data-i18n="cover.scroll">向下滚动</span>
                     <div class="scroll-line"></div>
                 </div>
             </footer>
@@ -838,8 +878,8 @@
 
         <div class="interface-layer">
             <div class="query-container">
-                <span class="query-label">Active Organism // Query</span>
-                <input type="text" class="query-input" value="The Living Reef: A Story of Color and Loss" placeholder="Enter a theme to explore...">
+                <span class="query-label" data-i18n="ch2.queryLabel">活跃生物体 // 查询</span>
+                <input type="text" class="query-input" data-i18n-value="ch2.queryValue" data-i18n-placeholder="ch2.queryPlaceholder" value="活着的礁：色彩与失落的故事" placeholder="输入主题以探索…">
             </div>
 
             <!-- 日记编辑区：可编辑，关闭拼写检查 -->
@@ -865,14 +905,14 @@ I am trying to listen. To let the reef’s story be heard.
     <!-- 第三页：珊瑚礁纬度分布图 -->
     <div class="chapter chapter-3" id="chapter-3">
         <div class="chapter3-chart-container">
-            <h2 class="chapter3-title">Coral Reef Distribution by Latitude</h2>
+            <h2 class="chapter3-title" data-i18n="ch3.title">珊瑚礁纬度分布</h2>
             <div class="chapter3-chart-wrap">
                 <canvas id="coralChart"></canvas>
             </div>
-            <p class="chapter3-description">
-                So where are the world’s coral reefs located?<br>
-                Most are found in warm oceans between 30° north and south of the equator, concentrated in gentle currents on either side of the equator — like shards of blue jade polished repeatedly by the tides.<br>
-                Every single mark on the map corresponds to a breathing forest beneath the sea.
+            <p class="chapter3-description" data-i18n-html="ch3.descHtml">
+                世界上的珊瑚礁在哪里？<br>
+                大多分布在赤道南北 30° 之间的暖洋，集中在赤道两侧平缓洋流之中——像被潮汐反复打磨的碎蓝玉。<br>
+                地图上的每一标记，都对应海底一片仍在呼吸的森林。
             </p>
         </div>
     </div>
@@ -1165,6 +1205,7 @@ I am trying to listen. To let the reef’s story be heard.
             editor.dataset.processed = "true"; // 标记为已处理
             updateWordCoords(); // 更新文字坐标
         }
+        window.__ohScanText = scanText;
 
         // 更新文字坐标：遍历所有word span，获取其位置和尺寸
         function updateWordCoords() {
@@ -1367,24 +1408,51 @@ I am trying to listen. To let the reef’s story be heard.
         setTimeout(scanText, 100);
 
         // ===================== 第三页 纬度分布图 =====================
+        function getChartPack() {
+            const lang = typeof getOhLang === 'function' ? getOhLang() : 'zh';
+            return (window.OH_I18N && window.OH_I18N[lang] && window.OH_I18N[lang].ch3)
+                ? window.OH_I18N[lang].ch3.chart
+                : { labels: [], dataset: '', tooltipReefs: '', tooltipBand: '' };
+        }
+
+        function getOhChartFontFamily() {
+            return document.documentElement.lang === 'zh-CN'
+                ? "'Noto Sans SC', 'PingFang SC', sans-serif"
+                : "'Manrope', sans-serif";
+        }
+
+        function applyCoralChartLanguage(chart) {
+            if (!chart) return;
+            const pack = getChartPack();
+            const ff = getOhChartFontFamily();
+            chart.data.labels = pack.labels.slice();
+            chart.data.datasets[0].label = pack.dataset;
+            chart.options.plugins.tooltip.callbacks.label = function (context) {
+                return pack.tooltipReefs + context.raw;
+            };
+            chart.options.plugins.tooltip.callbacks.title = function (context) {
+                return pack.tooltipBand + context[0].label;
+            };
+            chart.options.plugins.tooltip.titleFont = chart.options.plugins.tooltip.titleFont || {};
+            chart.options.plugins.tooltip.bodyFont = chart.options.plugins.tooltip.bodyFont || {};
+            chart.options.plugins.tooltip.titleFont.family = ff;
+            chart.options.plugins.tooltip.bodyFont.family = ff;
+            if (chart.options.scales.x.ticks.font) chart.options.scales.x.ticks.font.family = ff;
+            if (chart.options.scales.y.ticks.font) chart.options.scales.y.ticks.font.family = ff;
+            chart.update('none');
+        }
+
         function initCoralChart() {
             const coralCanvas = document.getElementById('coralChart');
             if (!coralCanvas || typeof Chart === 'undefined') return;
 
+            const pack = getChartPack();
             const coralChart = new Chart(coralCanvas, {
                 type: 'bar',
                 data: {
-                    labels: [
-                        '30°N - 20°N',
-                        '20°N - 10°N',
-                        '10°N - 0°',
-                        'Equator',
-                        '0° - 10°S',
-                        '10°S - 20°S',
-                        '20°S - 30°S'
-                    ],
+                    labels: pack.labels.slice(),
                     datasets: [{
-                        label: 'Number of Coral Reefs',
+                        label: pack.dataset,
                         data: [1200, 2500, 3000, 3200, 3500, 3800, 1800],
                         backgroundColor: '#1A4D8F',
                         borderWidth: 0,
@@ -1406,10 +1474,12 @@ I am trying to listen. To let the reef’s story be heard.
                             intersect: false,
                             callbacks: {
                                 label: function (context) {
-                                    return `Coral reefs: ${context.raw}`;
+                                    const p = getChartPack();
+                                    return p.tooltipReefs + context.raw;
                                 },
                                 title: function (context) {
-                                    return `Latitude band: ${context[0].label}`;
+                                    const p = getChartPack();
+                                    return p.tooltipBand + context[0].label;
                                 }
                             },
                             backgroundColor: '#222',
@@ -1440,6 +1510,9 @@ I am trying to listen. To let the reef’s story be heard.
                     }
                 }
             });
+            window.__coralChart = coralChart;
+            applyCoralChartLanguage(coralChart);
+            window.addEventListener('oh-lang-change', () => applyCoralChartLanguage(window.__coralChart));
             return coralChart;
         }
         document.addEventListener('DOMContentLoaded', initCoralChart);
@@ -2506,30 +2579,31 @@ I am trying to listen. To let the reef’s story be heard.
         </div>
 
         <nav class="append-nav">
-            <div class="append-logo">CORAL REEF · THESIS</div>
+            <div class="append-logo" data-i18n="nav.logo">CORAL REEF · THESIS</div>
             <div class="append-nav-right">
-                <span>Exhibition</span>
-                <span>Data Art</span>
+                <span data-i18n="nav.exhibition">展览</span>
+                <span data-i18n="nav.dataArt">数据艺术</span>
                 <span>2026</span>
+                <button type="button" class="lang-toggle">EN</button>
             </div>
         </nav>
 
         <main class="append-main">
-            <section class="append-panel append-theme-blue" id="append-map-section">
+            <section class="append-panel append-theme-blue" id="append-map-section" data-i18n-aria="append.map.aria">
                 <div class="append-headline">
-                    <h2>Global Coral Reef Distribution</h2>
+                    <h2 data-i18n="append.map.title">全球珊瑚礁分布</h2>
                     <div class="append-decor-line"></div>
-                    <p class="append-poetry">Following the waters between 30°N and 30°S, the world is defined by 29 coral reef regions.<br>Each designated area is a precious living realm cherished by the ocean, yet is quietly being eroded by the crisis of coral bleaching.</p>
-                    <p class="append-subtitle">Allen Coral Atlas bioregions reveal the global reef pattern and regional descriptors at a glance.</p>
+                    <p class="append-poetry" data-i18n-html="append.map.poetry">沿 30°N 至 30°S 的水域，世界被划分为 29 个珊瑚礁区域。<br>每一处划定的海域都是海洋珍视的生命疆域，却正被珊瑚白化危机悄然侵蚀。</p>
+                    <p class="append-subtitle" data-i18n="append.map.subtitle">Allen Coral Atlas 生物区划揭示全球礁体格局与区域特征。</p>
                 </div>
                 <div class="append-viz-wrap">
-                    <div class="append-viz-title">01 · Global Reef Distribution</div>
+                    <div class="append-viz-title" data-i18n="append.map.vizTitle">01 · 全球礁体分布</div>
                     <div class="append-map-atlas">
                         <div class="append-map-interactive">
-                            <img class="append-map-image" alt="Allen Coral Atlas global coral reef regions" src="https://raw.githubusercontent.com/15315571426/coral-images/refs/heads/main/fourth-page-map-61a512.png" loading="lazy" decoding="async" fetchpriority="low">
+                            <img class="append-map-image" data-i18n-aria="append.map.mapAlt" alt="Allen Coral Atlas 全球珊瑚礁区域图" src="https://raw.githubusercontent.com/15315571426/coral-images/refs/heads/main/fourth-page-map-61a512.png" loading="lazy" decoding="async" fetchpriority="low">
                         </div>
                         <div class="append-region-legend">
-                            <div class="append-region-legend-title">Region Descriptor*</div>
+                            <div class="append-region-legend-title" data-i18n="append.map.legendTitle">区域说明*</div>
                             <ul class="append-region-grid">
                                 <li class="append-region-item"><span class="append-region-swatch" style="background:#91B262;"></span>Andaman Sea</li>
                                 <li class="append-region-item"><span class="append-region-swatch" style="background:#7F59E0;"></span>Timor &amp; Arafura Seas</li>
@@ -2567,7 +2641,7 @@ I am trying to listen. To let the reef’s story be heard.
             </section>
 
             <!-- 第五屏（序列第 5 页）：全球胁迫因素沉浸叙事 + Graphy 图表弹窗 -->
-            <section class="append-panel append-theme-light" id="append-ocean-narrative" aria-label="Ocean stress narrative">
+            <section class="append-panel append-theme-light" id="append-ocean-narrative" data-i18n-aria="append.ocean.aria">
                 <div class="ocean-narr-noise" aria-hidden="true"></div>
                 <div id="ocean-narr-canvas-container">
                     <canvas id="ocean-narr-globe"></canvas>
@@ -2638,7 +2712,7 @@ I am trying to listen. To let the reef’s story be heard.
                     <div class="chart-modal-panel">
                         <header class="chart-modal-header">
                             <h2 id="ocean-narr-chart-modal-title" class="chart-modal-title"></h2>
-                            <button type="button" class="chart-modal-close" data-ocean-narr-close-modal aria-label="Close dialog">×</button>
+                            <button type="button" class="chart-modal-close" data-ocean-narr-close-modal data-i18n-aria="append.ocean.closeModal" aria-label="关闭对话框">×</button>
                         </header>
                         <div class="chart-modal-body" id="ocean-narr-chart-modal-body"></div>
                     </div>
@@ -3103,13 +3177,13 @@ I am trying to listen. To let the reef’s story be heard.
 
             <section class="append-panel append-theme-light" id="append-bleaching-section">
                 <div class="append-headline">
-                    <h2>Coral Bleaching Heatmap</h2>
+                    <h2 data-i18n="append.bleaching.title">珊瑚白化热力图</h2>
                     <div class="append-decor-line"></div>
-                    <p class="append-poetry">From 1884 to 2019, the heatmap traces rising bleaching intensity year by year.<br>Before colour fades the coral grows quiet; after the numbers rise the reef grows silent.</p>
-                    <p class="append-subtitle">A time-lapse view of reef bleaching across regions, revealing decades of warming-driven change.</p>
+                    <p class="append-poetry" data-i18n-html="append.bleaching.poetry">从 1884 到 2019，热力图逐年勾勒白化强度的上升。<br>在色彩褪去之前，珊瑚先变得安静；数字攀升之后，礁体归于沉默。</p>
+                    <p class="append-subtitle" data-i18n="append.bleaching.subtitle">区域白化率的时间序列视图，呈现数十年变暖驱动的变化。</p>
                 </div>
                 <div class="append-viz-wrap">
-                    <div class="append-viz-title">02 · Bleaching Rate 1884—2019</div>
+                    <div class="append-viz-title" data-i18n="append.bleaching.vizTitle">02 · 白化率 1884—2019</div>
                     <div class="append-flourish-wrap">
                         <div class="flourish-embed flourish-heatmap" data-src="visualisation/28786550">
                             <noscript><img src="https://public.flourish.studio/visualisation/28786550/thumbnail" width="100%" alt="heatmap visualization"></noscript>
@@ -3120,16 +3194,13 @@ I am trying to listen. To let the reef’s story be heard.
 
             <section class="append-panel append-theme-light" id="append-timeline-section">
                 <div class="append-headline">
-                    <h2>Coral Reef Stress Radar</h2>
+                    <h2 data-i18n="append.radar.title">珊瑚礁胁迫雷达图</h2>
                     <div class="append-decor-line"></div>
-                    <p class="append-poetry">The radar reveals the hidden forces shaping coral health:
-                        rising heat, acidification, pollution and overfishing form the outer edge of risk,
-                        while reef resilience—health and recovery—dwells closer to the center.<br>When these pressures compound, even the strongest reefs falter.
-                        The jagged contrast between risk and resilience is no longer abstract—it is measurable, and visible.</p>
-                    <p class="append-subtitle">Multi-factor pressures driving bleaching, across global reefs.</p>
+                    <p class="append-poetry" data-i18n-html="append.radar.poetry">雷达揭示塑造珊瑚健康的隐秘力量：升温、酸化、污染与过度捕捞构成风险外缘，而礁体韧性——健康与恢复——靠近中心。<br>当这些压力叠加，即便最顽强的礁也会动摇；风险与韧性之间的锯齿对比，不再抽象，而是可测、可见。</p>
+                    <p class="append-subtitle" data-i18n="append.radar.subtitle">驱动全球礁体白化的多因素压力。</p>
                 </div>
                 <div class="append-viz-wrap">
-                    <div class="append-viz-title">03 · Coral Bleaching Pressure Radar</div>
+                    <div class="append-viz-title" data-i18n="append.radar.vizTitle">03 · 珊瑚白化压力雷达</div>
                     <div class="append-flourish-wrap">
                         <div class="flourish-embed flourish-radar" data-src="visualisation/28793958">
                             <script src="https://public.flourish.studio/resources/embed.js"></script>
@@ -3139,24 +3210,24 @@ I am trying to listen. To let the reef’s story be heard.
                 </div>
             </section>
 
-            <section class="append-panel append-theme-light" id="append-coral-garden-section" aria-label="Coral Breath interactive 3D garden">
+            <section class="append-panel append-theme-light" id="append-coral-garden-section" aria-label="珊瑚呼吸交互 3D 花园">
                 <div id="append-coral-react-root" class="append-coral-garden-mount"></div>
             </section>
 
-            <section id="append-credit-section" class="append-panel bg-[#F5F5F5] flex flex-col p-12 md:p-24 overflow-hidden relative" aria-label="Epilogue">
+            <section id="append-credit-section" class="append-panel bg-[#F5F5F5] flex flex-col p-12 md:p-24 overflow-hidden relative" data-i18n-aria="append.epilogue.aria">
                 <!-- Header Text (Smaller fonts, top aligned) -->
                 <div class="flex-shrink-0 max-w-2xl mb-12">
-                    <h2 class="tw-ignore-append-h2 font-serif italic text-6xl md:text-8xl font-light text-[#141414] mb-8">Epilogue</h2>
+                    <h2 class="tw-ignore-append-h2 font-serif italic text-6xl md:text-8xl font-light text-[#141414] mb-8" data-i18n="append.epilogue.title">尾声</h2>
 
                     <div class="space-y-6">
                         <div class="border-l-2 border-[#0A3A8A] pl-8">
-                            <p class="font-sans font-extralight text-lg text-[#4a4a4a] leading-relaxed tracking-wide">
-                                When coral is seen, the ocean can finally be heard.<br>
-                                When data is felt, action follows.
+                            <p class="font-sans font-extralight text-lg text-[#4a4a4a] leading-relaxed tracking-wide" data-i18n-html="append.epilogue.quoteHtml">
+                                当珊瑚被看见，海洋终于能被听见。<br>
+                                当数据被感受，行动随之而来。
                             </p>
                         </div>
-                        <p class="font-sans font-light text-base text-[#6e6e6e] leading-relaxed max-w-md">
-                            This is not an ending but a shift in how we watch—from looking at the sea to helping guard it.
+                        <p class="font-sans font-light text-base text-[#6e6e6e] leading-relaxed max-w-md" data-i18n="append.epilogue.body">
+                            这不是终点，而是观看方式的转变——从凝视大海，到参与守护。
                         </p>
                     </div>
                 </div>
@@ -3220,11 +3291,11 @@ I am trying to listen. To let the reef’s story be heard.
                 <!-- Credits Footer -->
                 <div class="flex-shrink-0 mt-8 flex justify-between items-end border-t border-black/5 pt-8">
                     <div class="space-y-1">
-                        <p class="text-[10px] uppercase tracking-[0.2em] text-[#999]">Graduation thesis · Interaction design · Coral reef visualization</p>
-                        <p class="text-[10px] uppercase tracking-[0.2em] text-[#999]">© 2026 Coral Data Art Project · THE OCEAN'S HEARTBEAT</p>
+                        <p class="text-[10px] uppercase tracking-[0.2em] text-[#999]" data-i18n="append.epilogue.credit1">毕业设计 · 交互设计 · 珊瑚礁可视化</p>
+                        <p class="text-[10px] uppercase tracking-[0.2em] text-[#999]" data-i18n="append.epilogue.credit2">© 2026 珊瑚数据艺术项目 · 海洋的心跳</p>
                     </div>
                     <div class="text-[10px] uppercase tracking-widest text-[#aaa]">
-                        For marine ecological protection
+                        <span data-i18n="append.epilogue.credit3">献给海洋生态保护</span>
                     </div>
                 </div>
             </section>
@@ -3240,38 +3311,10 @@ I am trying to listen. To let the reef’s story be heard.
             const tooltip = document.getElementById('append-tooltip');
             if (!root || !tooltip) return;
 
-            /** pickColor 与图例色块一致，用于 canvas 拾色匹配分区（抗锯齿/压缩可微调 MATCH_THRESH） */
-            const ATLAS_REGIONS = [
-                { name: "Andaman Sea", coralArea: "1,850 km²", risk: "Medium Risk", healthyPct: "32%", pickColor: "#91B262" },
-                { name: "Timor & Arafura Seas", coralArea: "2,100 km²", risk: "Medium-High Risk", healthyPct: "25%", pickColor: "#7F59E0" },
-                { name: "Central Indian Ocean", coralArea: "950 km²", risk: "High Risk", healthyPct: "18%", pickColor: "#448FAF" },
-                { name: "Coral Sea", coralArea: "3,200 km²", risk: "Medium Risk", healthyPct: "40%", pickColor: "#F2EE83" },
-                { name: "Southwestern Pacific", coralArea: "2,800 km²", risk: "Medium-High Risk", healthyPct: "22%", pickColor: "#F4A4D1" },
-                { name: "GBR & Torres Strait", coralArea: "34,800 km²", risk: "Very High Risk", healthyPct: "35%", pickColor: "#78EBDC" },
-                { name: "Gulf of Aden", coralArea: "420 km²", risk: "Medium Risk", healthyPct: "15%", pickColor: "#494882" },
-                { name: "Mesoamerica", coralArea: "1,600 km²", risk: "High Risk", healthyPct: "28%", pickColor: "#8DCCDD" },
-                { name: "Hawaiian Islands", coralArea: "1,200 km²", risk: "Medium Risk", healthyPct: "45%", pickColor: "#A84144" },
-                { name: "Southern Asia", coralArea: "2,600 km²", risk: "High Risk", healthyPct: "19%", pickColor: "#D57F80" },
-                { name: "Southeast Asian Archipelago", coralArea: "45,000 km²", risk: "High Risk", healthyPct: "12%", pickColor: "#383292" },
-                { name: "Eastern Micronesia", coralArea: "1,100 km²", risk: "Medium Risk", healthyPct: "20%", pickColor: "#61B345" },
-                { name: "Western Micronesia", coralArea: "1,300 km²", risk: "Medium Risk", healthyPct: "25%", pickColor: "#F28E5D" },
-                { name: "Eastern Africa & Madagascar", coralArea: "3,500 km²", risk: "Medium-High Risk", healthyPct: "18%", pickColor: "#8A673F" },
-                { name: "Western Australia", coralArea: "2,200 km²", risk: "Medium Risk", healthyPct: "30%", pickColor: "#935F82" },
-                { name: "Northern Caribbean & Bahamas", coralArea: "2,500 km²", risk: "High Risk", healthyPct: "22%", pickColor: "#B877D5" },
-                { name: "Southeastern Asia", coralArea: "5,200 km²", risk: "Very High Risk", healthyPct: "10%", pickColor: "#D65C79" },
-                { name: "Eastern PNG & Solomons Islands", coralArea: "4,100 km²", risk: "Medium-High Risk", healthyPct: "15%", pickColor: "#F7BD95" },
-                { name: "Northwestern Arabian Sea", coralArea: "380 km²", risk: "Medium Risk", healthyPct: "20%", pickColor: "#C68D66" },
-                { name: "Philippines", coralArea: "2,300 km²", risk: "Very High Risk", healthyPct: "8%", pickColor: "#6B93D1" },
-                { name: "Red Sea", coralArea: "1,700 km²", risk: "Low Risk", healthyPct: "38%", pickColor: "#A5DAF9" },
-                { name: "Western Indian Ocean", coralArea: "2,600 km²", risk: "Medium-High Risk", healthyPct: "22%", pickColor: "#7A5A41" },
-                { name: "South China Sea", coralArea: "1,900 km²", risk: "High Risk", healthyPct: "10%", pickColor: "#A97A47" },
-                { name: "Southeastern Caribbean", coralArea: "1,800 km²", risk: "High Risk", healthyPct: "24%", pickColor: "#B15A98" },
-                { name: "Subtropical Eastern Australia", coralArea: "1,450 km²", risk: "Medium Risk", healthyPct: "33%", pickColor: "#99C17B" },
-                { name: "Northeastern Asia", coralArea: "780 km²", risk: "Medium Risk", healthyPct: "29%", pickColor: "#DF8B52" },
-                { name: "Tropical Eastern Pacific", coralArea: "850 km²", risk: "High Risk", healthyPct: "25%", pickColor: "#7297D6" },
-                { name: "Central South Pacific", coralArea: "1,680 km²", risk: "Medium-High Risk", healthyPct: "26%", pickColor: "#A57CEB" },
-                { name: "Small reefs or low coral areas", coralArea: "< 500 km²", risk: "Medium Risk", healthyPct: "15%", pickColor: "#CCCCCC" }
-            ];
+            /** pickColor 与图例色块一致，用于 canvas 拾色匹配分区 */
+            function getAtlasRegions() {
+                return window.__ohAtlasRegions || (typeof buildAtlasRegions === 'function' ? buildAtlasRegions('zh') : []);
+            }
 
             const NS = "http://www.w3.org/2000/svg";
             const q = (id) => root.querySelector('#' + id);
@@ -3290,13 +3333,10 @@ I am trying to listen. To let the reef’s story be heard.
             };
             const hideTip = () => tooltip.classList.remove("show", "append-tooltip--atlas");
 
-            function atlasRiskClass(risk) {
-                const t = risk.toLowerCase();
-                if (t.includes("very high")) return "append-atlas-risk-vh";
-                if (t.includes("medium-high")) return "append-atlas-risk-mh";
-                if (t.includes("high")) return "append-atlas-risk-h";
-                if (t.includes("low")) return "append-atlas-risk-l";
-                return "append-atlas-risk-m";
+            function atlasRiskClass(region) {
+                const key = region.riskKey || region.risk;
+                if (typeof atlasRiskClassByKey === 'function') return atlasRiskClassByKey(key);
+                return 'append-atlas-risk-m';
             }
 
             function coverPointToNatural(px, py, W, H, nw, nh) {
@@ -3350,13 +3390,17 @@ I am trying to listen. To let the reef’s story be heard.
             }
 
             function showAtlasTip(e, region) {
-                const rc = atlasRiskClass(region.risk);
+                const rc = atlasRiskClass(region);
+                const lang = typeof getOhLang === 'function' ? getOhLang() : 'zh';
+                const labels = (window.OH_I18N && window.OH_I18N[lang] && window.OH_I18N[lang].atlas)
+                    ? window.OH_I18N[lang].atlas.labels
+                    : { coralArea: 'Coral area', risk: 'Risk', healthy: 'Healthy coral' };
                 tooltip.classList.add("append-tooltip--atlas");
                 tooltip.innerHTML =
                     '<strong class="append-atlas-name">' + region.name.replace(/</g, "&lt;") + "</strong>" +
-                    '<span class="append-atlas-row"><span class="append-atlas-label">Coral area</span>' + region.coralArea + "</span>" +
-                    '<span class="append-atlas-row"><span class="append-atlas-label">Risk</span><span class="' + rc + '">' + region.risk + "</span></span>" +
-                    '<span class="append-atlas-row"><span class="append-atlas-label">Healthy coral</span>' + region.healthyPct + "</span>";
+                    '<span class="append-atlas-row"><span class="append-atlas-label">' + labels.coralArea + '</span>' + region.coralArea + "</span>" +
+                    '<span class="append-atlas-row"><span class="append-atlas-label">' + labels.risk + '</span><span class="' + rc + '">' + region.risk + "</span></span>" +
+                    '<span class="append-atlas-row"><span class="append-atlas-label">' + labels.healthy + '</span>' + region.healthyPct + "</span>";
                 tooltip.style.left = e.clientX + "px";
                 tooltip.style.top = e.clientY + "px";
                 tooltip.classList.add("show");
@@ -3367,9 +3411,10 @@ I am trying to listen. To let the reef’s story be heard.
 
             function bindLegendAtlasTips() {
                 const items = root.querySelectorAll(".append-region-item");
+                const regions = getAtlasRegions();
                 items.forEach((li, i) => {
-                    if (i >= ATLAS_REGIONS.length) return;
-                    li.addEventListener("mouseenter", (e) => showAtlasTip(e, ATLAS_REGIONS[i]));
+                    if (i >= regions.length) return;
+                    li.addEventListener("mouseenter", (e) => showAtlasTip(e, regions[i]));
                     li.addEventListener("mousemove", (e) => {
                         if (!tooltip.classList.contains("append-tooltip--atlas")) return;
                         tooltip.style.left = e.clientX + "px";
@@ -3388,7 +3433,7 @@ I am trying to listen. To let the reef’s story be heard.
                     return;
                 }
 
-                const atlasRgbList = ATLAS_REGIONS.map((reg) => {
+                const atlasRgbList = getAtlasRegions().map((reg) => {
                     const n = parseInt(reg.pickColor.slice(1), 16);
                     return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
                 });
@@ -3451,7 +3496,7 @@ I am trying to listen. To let the reef’s story be heard.
                         return;
                     }
                     lastIdx = idx;
-                    showAtlasTip(e, ATLAS_REGIONS[idx]);
+                    showAtlasTip(e, getAtlasRegions()[idx]);
                 }
 
                 function startMapPickMode() {
@@ -3735,73 +3780,76 @@ I am trying to listen. To let the reef’s story be heard.
             GARDEN: 'GARDEN'
         };
 
-        const CORAL_GARDEN_DATA = [
-            {
-                nameEn: 'Hermatype Coral',
-                subName: 'Reef-building Coral',
-                desc: 'The "builder" of the ocean. Secretes calcium carbonate to form massive, resilient coral reefs over centuries.',
-                img: 'https://raw.githubusercontent.com/15315571426/coral-images/main/1造礁珊瑚.png'
-            },
-            {
-                nameEn: 'Soft Coral',
-                subName: 'Alcyonacea',
-                desc: 'Flexible, vibrant, and skeleton-free. Thrives in tropical oceans with gentle water movement.',
-                img: 'https://raw.githubusercontent.com/15315571426/coral-images/main/2软珊瑚.png'
-            },
-            {
-                nameEn: 'Gorgonia',
-                subName: 'Sea Fan',
-                desc: 'Fan-shaped deep-sea coral with delicate branches, known for its elegant, rhythmic swaying motion.',
-                img: 'https://raw.githubusercontent.com/15315571426/coral-images/main/3柳珊瑚.png'
-            },
-            {
-                nameEn: 'Madrepore',
-                subName: 'Stony Coral',
-                desc: 'The primary architect of coral reefs. Hard, rigid calcium carbonate skeleton forms the foundation of marine ecosystems.',
-                img: 'https://raw.githubusercontent.com/15315571426/coral-images/main/4石珊瑚.png'
-            },
-            {
-                nameEn: 'Meandrina',
-                subName: 'Brain Coral',
-                desc: 'Named for its brain-like surface grooves. Long-lived, sturdy, and critical to reef structure.',
-                img: 'https://raw.githubusercontent.com/15315571426/coral-images/main/5脑珊瑚.png'
-            },
-            {
-                nameEn: 'Plerocera',
-                subName: 'Plate Coral',
-                desc: 'Flat, wide, and table-like shape. Efficient at capturing sunlight in shallow, calm marine environments.',
-                img: 'https://raw.githubusercontent.com/15315571426/coral-images/main/6盘珊瑚.png'
-            },
-            {
-                nameEn: 'Zoanthid',
-                subName: 'Button Coral',
-                desc: 'Small, colorful, and highly toxic. Forms dense colonies on rocks and reef substrates.',
-                img: 'https://raw.githubusercontent.com/15315571426/coral-images/main/7纽扣珊瑚.png'
-            },
-            {
-                nameEn: 'Bubble Coral',
-                subName: 'Plerogyra Sinuosa',
-                desc: 'Inflates into translucent bubbles during the day; extends tentacles to feed at night. Venomous but visually striking.',
-                img: 'https://raw.githubusercontent.com/15315571426/coral-images/main/8气泡珊瑚.png'
-            },
-            {
-                nameEn: 'Elegance Coral',
-                subName: 'Nile Coral',
-                desc: 'Catches prey with long tentacles. Endangered due to coral bleaching; protected in many regions.',
-                img: 'https://raw.githubusercontent.com/15315571426/coral-images/main/9尼罗河珊瑚.png'
-            }
+        const CORAL_GARDEN_IMGS = [
+            'https://raw.githubusercontent.com/15315571426/coral-images/main/1造礁珊瑚.png',
+            'https://raw.githubusercontent.com/15315571426/coral-images/main/2软珊瑚.png',
+            'https://raw.githubusercontent.com/15315571426/coral-images/main/3柳珊瑚.png',
+            'https://raw.githubusercontent.com/15315571426/coral-images/main/4石珊瑚.png',
+            'https://raw.githubusercontent.com/15315571426/coral-images/main/5脑珊瑚.png',
+            'https://raw.githubusercontent.com/15315571426/coral-images/main/6盘珊瑚.png',
+            'https://raw.githubusercontent.com/15315571426/coral-images/main/7纽扣珊瑚.png',
+            'https://raw.githubusercontent.com/15315571426/coral-images/main/8气泡珊瑚.png',
+            'https://raw.githubusercontent.com/15315571426/coral-images/main/9尼罗河珊瑚.png'
         ];
+
+        function getCoralGardenData() {
+            const lang = typeof getOhLang === 'function' ? getOhLang() : 'zh';
+            const species = (window.OH_I18N && window.OH_I18N[lang] && window.OH_I18N[lang].coralGarden)
+                ? window.OH_I18N[lang].coralGarden.species
+                : [];
+            return species.map((s, i) => ({
+                nameEn: s.name,
+                subName: s.sub,
+                desc: s.desc,
+                img: CORAL_GARDEN_IMGS[i]
+            }));
+        }
+
+        function getCgStatus(key) {
+            const lang = typeof getOhLang === 'function' ? getOhLang() : 'zh';
+            const st = window.OH_I18N && window.OH_I18N[lang] && window.OH_I18N[lang].coralGarden
+                ? window.OH_I18N[lang].coralGarden.status
+                : null;
+            return st && st[key] ? st[key] : '';
+        }
+
+        function getCgPack() {
+            const lang = typeof getOhLang === 'function' ? getOhLang() : 'zh';
+            return (window.OH_I18N && window.OH_I18N[lang] && window.OH_I18N[lang].coralGarden)
+                ? window.OH_I18N[lang].coralGarden
+                : { tooltipTag: '', meta: { id: 'ID', view: 'VIEW', state: 'STATE' } };
+        }
 
         function CoralGardenApp() {
             const containerRef = useRef(null);
             const hoveredCoralRef = useRef(null);
             const hoveredTypeIdxRef = useRef(null);
-            const [currentStatus, setCurrentStatus] = useState('Hold to watch the reef come alive.');
+            const [uiLang, setUiLang] = useState(typeof getOhLang === 'function' ? getOhLang() : 'zh');
+            const [currentStatus, setCurrentStatus] = useState(() => getCgStatus('idle'));
             const [holdProgress, setHoldProgress] = useState(0);
             const [isHolding, setIsHolding] = useState(false);
             const [hoveredTypeIdx, setHoveredTypeIdx] = useState(null);
             const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
             const [animState, setAnimState] = useState(CoralGardenAnimState.IDLE);
+            const coralData = getCoralGardenData();
+            const cgPack = getCgPack();
+
+            useEffect(() => {
+                const onLang = (e) => {
+                    const lang = e.detail && e.detail.lang ? e.detail.lang : getOhLang();
+                    setUiLang(lang);
+                    const map = {
+                        [CoralGardenAnimState.IDLE]: 'idle',
+                        [CoralGardenAnimState.HOLDING]: 'holding',
+                        [CoralGardenAnimState.GROWING]: 'growing',
+                        [CoralGardenAnimState.GARDEN]: 'garden'
+                    };
+                    const key = map[animState] || 'idle';
+                    setCurrentStatus(getCgStatus(key));
+                };
+                window.addEventListener('oh-lang-change', onLang);
+                return () => window.removeEventListener('oh-lang-change', onLang);
+            }, [animState]);
 
             useEffect(() => {
                 if (!containerRef.current) return;
@@ -3896,7 +3944,7 @@ I am trying to listen. To let the reef’s story be heard.
 
                 const initGarden = () => {
                     let coralIdx = 0;
-                    CORAL_GARDEN_DATA.forEach((data, typeIdx) => {
+                    getCoralGardenData().forEach((data, typeIdx) => {
                         const count = 15 + Math.floor(Math.random() * 5);
                         for (let j = 0; j < count; j++) {
                             const group = new THREE.Group();
@@ -3955,7 +4003,7 @@ I am trying to listen. To let the reef’s story be heard.
                             scene.add(group);
                             coralMeshes.push(group);
 
-                            const pPerCoral = Math.floor(particleCount / (CORAL_GARDEN_DATA.length * 18));
+                            const pPerCoral = Math.floor(particleCount / (getCoralGardenData().length * 18));
                             const startP = Math.min(coralIdx * pPerCoral, particleCount);
                             const endP = Math.min((coralIdx + 1) * pPerCoral, particleCount);
 
@@ -4089,7 +4137,7 @@ I am trying to listen. To let the reef’s story be heard.
                                 camera.updateProjectionMatrix();
                             }
                             controls.enabled = true;
-                            if (!cancelled) setCurrentStatus('The reef breathes again. Drag to rotate, hover to explore.');
+                            if (!cancelled) setCurrentStatus(getCgStatus('garden'));
                         }
                     } else {
                         particleMaterial.opacity *= 0.95;
@@ -4109,7 +4157,7 @@ I am trying to listen. To let the reef’s story be heard.
                             lastHoldProgressBucket = -1;
                             if (!cancelled) {
                                 setIsHolding(false);
-                                setCurrentStatus('Life is weaving its patterns.');
+                                setCurrentStatus(getCgStatus('growing'));
                             }
                         }
                     }
@@ -4190,7 +4238,7 @@ I am trying to listen. To let the reef’s story be heard.
                     lastHoldProgressBucket = -1;
                     setHoldProgress(0);
                     setIsHolding(false);
-                    setCurrentStatus('Hold to watch the reef come alive.');
+                    setCurrentStatus(getCgStatus('idle'));
                 };
 
                 const handlePointerDown = (e) => {
@@ -4205,7 +4253,7 @@ I am trying to listen. To let the reef’s story be heard.
                     lastHoldProgressBucket = -1;
                     setHoldProgress(0);
                     setIsHolding(true);
-                    setCurrentStatus('The seeds are awakening...');
+                    setCurrentStatus(getCgStatus('holding'));
                 };
 
                 const handlePointerUp = (e) => {
@@ -4241,7 +4289,7 @@ I am trying to listen. To let the reef’s story be heard.
 
             return (
                 <div className="cg-root">
-                    <div className="cg-overlay-top">Sub-Surface Reconstruction / 04-Coral-Garden</div>
+                    <div className="cg-overlay-top">{typeof ohT === 'function' ? ohT('append.coralOverlay') : 'Sub-Surface Reconstruction / 04-Coral-Garden'}</div>
                     <div ref={containerRef} className="cg-canvas-wrap" />
                     {hoveredTypeIdx !== null && (
                         <div
@@ -4253,10 +4301,10 @@ I am trying to listen. To let the reef’s story be heard.
                                 transform: 'translateY(0)'
                             }}
                         >
-                            <div className="cg-tooltip-tag">Classification</div>
+                            <div className="cg-tooltip-tag">{cgPack.tooltipTag}</div>
                             <div className="cg-tooltip-names-row">
                                 <img
-                                    src={CORAL_GARDEN_DATA[hoveredTypeIdx].img}
+                                    src={coralData[hoveredTypeIdx].img}
                                     alt=""
                                     className="cg-tooltip-thumb"
                                     width={40}
@@ -4266,12 +4314,12 @@ I am trying to listen. To let the reef’s story be heard.
                                     decoding="async"
                                 />
                                 <div className="cg-tooltip-names-text">
-                                    <h3 className="cg-tooltip-title">{CORAL_GARDEN_DATA[hoveredTypeIdx].nameEn}</h3>
-                                    <span className="cg-tooltip-en cg-mono">{CORAL_GARDEN_DATA[hoveredTypeIdx].subName}</span>
+                                    <h3 className="cg-tooltip-title">{coralData[hoveredTypeIdx].nameEn}</h3>
+                                    <span className="cg-tooltip-en cg-mono">{coralData[hoveredTypeIdx].subName}</span>
                                 </div>
                             </div>
                             <div className="cg-tooltip-rule" />
-                            <p className="cg-tooltip-desc">{CORAL_GARDEN_DATA[hoveredTypeIdx].desc}</p>
+                            <p className="cg-tooltip-desc">{coralData[hoveredTypeIdx].desc}</p>
                         </div>
                     )}
                     <div className="cg-bottom">
@@ -4296,9 +4344,9 @@ I am trying to listen. To let the reef’s story be heard.
                         </div>
                     </div>
                     <div className="cg-meta">
-                        <div>ID: CORL_04_3D</div>
-                        <div>VIEW: ISOMETRIC</div>
-                        <div>STATE: {animState}</div>
+                        <div>{cgPack.meta.id}: CORL_04_3D</div>
+                        <div>{cgPack.meta.view}: ISOMETRIC</div>
+                        <div>{cgPack.meta.state}: {animState}</div>
                     </div>
                 </div>
             );
