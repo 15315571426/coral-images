@@ -1,7 +1,7 @@
 <!-- [GitHub Pages] the-oceans-heartbeat-bilingual.html — 外链双语部署版 -->
 <html lang="zh-CN">
 <head>
-    <!-- [双语加载时序] 必须最先执行：读 localStorage → 设 html lang → 注入 .text-en/.text-zh 关键 CSS -->
+    <!-- [双语加载时序 ①] 最顶端：读 localStorage → 设 html lang → 锁定 .text-en/.text-zh 显示 -->
     <script>
     (function () {
         var lang = 'zh';
@@ -18,24 +18,28 @@
         var style = document.createElement('style');
         style.id = 'oh-lang-critical';
         style.textContent = css;
-        document.head.appendChild(style);
+        (document.head || document.documentElement).appendChild(style);
         window.__ohBootLang = lang;
     })();
     </script>
+    <!-- [双语加载时序 ②] meta -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="theme-color" content="#f2f2f2">
     <title>海洋的心跳 · 珊瑚礁可视化</title>
+    <!-- [双语加载时序 ③] 外部字体 CDN -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <!-- [双语加载时序 ④] 中文排版样式外链（同目录相对路径） -->
+    <link rel="stylesheet" href="oh-zh-typography.css">
+    <!-- [双语加载时序 ⑤] 双语逻辑外链（同目录相对路径，先于 Tailwind/Chart.js 加载） -->
+    <script src="oh-i18n.js"></script>
+    <!-- 其余 CDN 资源 -->
     <link rel="dns-prefetch" href="https://unpkg.com">
     <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
     <link rel="dns-prefetch" href="https://raw.githubusercontent.com">
     <link rel="dns-prefetch" href="https://public.flourish.studio">
-    <!-- [双语加载时序] 中文排版字体，外链引入（与本地部署版一致） -->
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;600&display=swap" rel="stylesheet">
-    <!-- [双语加载时序] 中文排版样式，外链引入，不内联 -->
-    <link rel="stylesheet" href="oh-zh-typography.css">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -821,8 +825,6 @@
             will-change: transform;
         }
     </style>
-    <!-- [双语加载时序] 外链 i18n 脚本 defer，DOM 解析完成后尽早执行，不阻塞渲染 -->
-    <script src="oh-i18n.js" defer></script>
 </head>
 <body>
     <div id="page-scroll-progress" class="page-scroll-progress" aria-hidden="true">
@@ -906,17 +908,17 @@
                 <input type="text" class="query-input" data-i18n-value="ch2.queryValue" data-i18n-placeholder="ch2.queryPlaceholder" value="活着的礁：色彩与失落的故事" placeholder="输入主题以探索…">
             </div>
 
-            <!-- 日记编辑区：可编辑，关闭拼写检查 -->
+            <!-- [双语加载时序] 日记区默认中文，与 oh-i18n.js I18N.zh.ch2.journal 一致 -->
             <div class="journal-area" id="editor" contenteditable="true" spellcheck="false">
-Coral reefs are the ocean’s most vibrant living systems. Covering merely 0.1% of the seabed, they nurture over 25% of all marine species. They build homes, supply food, and shield coastlines, serving as the very pulse and foundation of the entire ocean.
+珊瑚礁是海洋中最蓬勃的生命系统。它们仅占海床的 0.1%，却养育了超过 25% 的海洋物种。它们筑巢、供食、护岸，是整个大洋的脉动与根基。
 
-It feels like the ocean’s own heartbeat, steady and bright. Branching out, thriving, sustaining life across the blue.
+这像海洋自己的心跳，稳定而明亮。枝杈伸展，繁盛生长，维系着整片蓝色中的生命。
 
-Yesterday, a shift began in these fragile waters. A gap between life and survival. The coral doesn’t just fade; it bleaches, losing the symbiosis that gave it color. If we could map this decline, would we see the warning signs we missed? Or would it reveal a geometry of loss we were too slow to see?
+昨天，这片脆弱水域开始出现转变——生与死之间裂开一道缝隙。珊瑚并非只是褪色；它在白化，失去曾赋予色彩的共生关系。若能绘制这份衰退，我们会看见曾错过的警示吗？抑或只是一幅我们反应太慢才看见的损失几何？
 
-We speak of "saving reefs" as if it is a distant goal, but perhaps hope is just the friction of action. The residue of the search for a cooler, bluer future.
+我们谈论「拯救礁体」，仿佛那是遥远的目标；但或许希望只是行动摩擦的余温——追寻更凉、更蓝未来的痕迹。
 
-I am trying to listen. To let the reef’s story be heard.
+我在试着倾听。让礁的故事被听见。
             </div>
         </div>
 
@@ -2531,6 +2533,18 @@ I am trying to listen. To let the reef’s story be heard.
             #append-root .append-flourish-wrap .flourish-embed {
                 width: 100%;
             }
+            /* [Flourish 403 修复] 内联双语 tooltip 提示层，语言切换只改文字 */
+            #append-root .oh-flourish-tooltip-hint {
+                margin-top: 0.65rem;
+                font-family: 'Manrope', sans-serif;
+                font-size: 0.72rem;
+                line-height: 1.55;
+                letter-spacing: 0.02em;
+                color: #6e6e6e;
+            }
+            html[lang="zh-CN"] #append-root .oh-flourish-tooltip-hint {
+                font-family: 'Noto Sans SC', 'PingFang SC', sans-serif;
+            }
             #append-root .append-chart-svg text {
                 font-family: 'Manrope', sans-serif;
                 font-weight: 400;
@@ -2628,36 +2642,37 @@ I am trying to listen. To let the reef’s story be heard.
                         </div>
                         <div class="append-region-legend">
                             <div class="append-region-legend-title" data-i18n="append.map.legendTitle">区域说明*</div>
+                            <!-- [双语加载时序] 图例默认中文区域名，与 oh-i18n.js I18N.zh.atlas.names 一致 -->
                             <ul class="append-region-grid">
-                                <li class="append-region-item"><span class="append-region-swatch" style="background:#91B262;"></span>Andaman Sea</li>
-                                <li class="append-region-item"><span class="append-region-swatch" style="background:#7F59E0;"></span>Timor &amp; Arafura Seas</li>
-                                <li class="append-region-item"><span class="append-region-swatch" style="background:#448FAF;"></span>Central Indian Ocean</li>
-                                <li class="append-region-item"><span class="append-region-swatch" style="background:#F2EE83;"></span>Coral Sea</li>
-                                <li class="append-region-item"><span class="append-region-swatch" style="background:#F4A4D1;"></span>Southwestern Pacific</li>
-                                <li class="append-region-item"><span class="append-region-swatch" style="background:#78EBDC;"></span>GBR &amp; Torres Strait</li>
-                                <li class="append-region-item"><span class="append-region-swatch" style="background:#494882;"></span>Gulf of Aden</li>
-                                <li class="append-region-item"><span class="append-region-swatch" style="background:#8DCCDD;"></span>Mesoamerica</li>
-                                <li class="append-region-item"><span class="append-region-swatch" style="background:#A84144;"></span>Hawaiian Islands</li>
-                                <li class="append-region-item"><span class="append-region-swatch" style="background:#D57F80;"></span>Southern Asia</li>
-                                <li class="append-region-item"><span class="append-region-swatch" style="background:#383292;"></span>Southeast Asian Archipelago</li>
-                                <li class="append-region-item"><span class="append-region-swatch" style="background:#61B345;"></span>Eastern Micronesia</li>
-                                <li class="append-region-item"><span class="append-region-swatch" style="background:#F28E5D;"></span>Western Micronesia Sea</li>
-                                <li class="append-region-item"><span class="append-region-swatch" style="background:#8A673F;"></span>Eastern Africa &amp; Madagascar</li>
-                                <li class="append-region-item"><span class="append-region-swatch" style="background:#935F82;"></span>Western Australia</li>
-                                <li class="append-region-item"><span class="append-region-swatch" style="background:#B877D5;"></span>Northern Caribbean &amp; Bahamas</li>
-                                <li class="append-region-item"><span class="append-region-swatch" style="background:#D65C79;"></span>Southeastern Asia</li>
-                                <li class="append-region-item"><span class="append-region-swatch" style="background:#F7BD95;"></span>Eastern PNG &amp; Solomons Islands</li>
-                                <li class="append-region-item"><span class="append-region-swatch" style="background:#C68D66;"></span>Northwestern Arabian Sea</li>
-                                <li class="append-region-item"><span class="append-region-swatch" style="background:#6B93D1;"></span>Philippines</li>
-                                <li class="append-region-item"><span class="append-region-swatch" style="background:#A5DAF9;"></span>Red Sea</li>
-                                <li class="append-region-item"><span class="append-region-swatch" style="background:#7A5A41;"></span>Western Indian Ocean</li>
-                                <li class="append-region-item"><span class="append-region-swatch" style="background:#A97A47;"></span>South China Sea</li>
-                                <li class="append-region-item"><span class="append-region-swatch" style="background:#B15A98;"></span>Southeastern Caribbean</li>
-                                <li class="append-region-item"><span class="append-region-swatch" style="background:#99C17B;"></span>Subtropical Eastern Australia</li>
-                                <li class="append-region-item"><span class="append-region-swatch" style="background:#DF8B52;"></span>Northeastern Asia</li>
-                                <li class="append-region-item"><span class="append-region-swatch" style="background:#7297D6;"></span>Tropical Eastern Pacific</li>
-                                <li class="append-region-item"><span class="append-region-swatch" style="background:#A57CEB;"></span>Central South Pacific</li>
-                                <li class="append-region-item"><span class="append-region-swatch" style="background:#CCCCCC;"></span>Small reefs or low coral areas</li>
+                                <li class="append-region-item"><span class="append-region-swatch" style="background:#91B262;"></span>安达曼海</li>
+                                <li class="append-region-item"><span class="append-region-swatch" style="background:#7F59E0;"></span>帝汶与阿拉弗拉海</li>
+                                <li class="append-region-item"><span class="append-region-swatch" style="background:#448FAF;"></span>印度洋中部</li>
+                                <li class="append-region-item"><span class="append-region-swatch" style="background:#F2EE83;"></span>珊瑚海</li>
+                                <li class="append-region-item"><span class="append-region-swatch" style="background:#F4A4D1;"></span>西南太平洋</li>
+                                <li class="append-region-item"><span class="append-region-swatch" style="background:#78EBDC;"></span>大堡礁与托雷斯海峡</li>
+                                <li class="append-region-item"><span class="append-region-swatch" style="background:#494882;"></span>亚丁湾</li>
+                                <li class="append-region-item"><span class="append-region-swatch" style="background:#8DCCDD;"></span>中美洲</li>
+                                <li class="append-region-item"><span class="append-region-swatch" style="background:#A84144;"></span>夏威夷群岛</li>
+                                <li class="append-region-item"><span class="append-region-swatch" style="background:#D57F80;"></span>南亚</li>
+                                <li class="append-region-item"><span class="append-region-swatch" style="background:#383292;"></span>东南亚群岛</li>
+                                <li class="append-region-item"><span class="append-region-swatch" style="background:#61B345;"></span>东密克罗尼西亚</li>
+                                <li class="append-region-item"><span class="append-region-swatch" style="background:#F28E5D;"></span>西密克罗尼西亚海</li>
+                                <li class="append-region-item"><span class="append-region-swatch" style="background:#8A673F;"></span>东非与马达加斯加</li>
+                                <li class="append-region-item"><span class="append-region-swatch" style="background:#935F82;"></span>西澳大利亚</li>
+                                <li class="append-region-item"><span class="append-region-swatch" style="background:#B877D5;"></span>北加勒比与巴哈马</li>
+                                <li class="append-region-item"><span class="append-region-swatch" style="background:#D65C79;"></span>东南亚</li>
+                                <li class="append-region-item"><span class="append-region-swatch" style="background:#F7BD95;"></span>东巴布亚新几内亚与所罗门群岛</li>
+                                <li class="append-region-item"><span class="append-region-swatch" style="background:#C68D66;"></span>阿拉伯海西北部</li>
+                                <li class="append-region-item"><span class="append-region-swatch" style="background:#6B93D1;"></span>菲律宾</li>
+                                <li class="append-region-item"><span class="append-region-swatch" style="background:#A5DAF9;"></span>红海</li>
+                                <li class="append-region-item"><span class="append-region-swatch" style="background:#7A5A41;"></span>西印度洋</li>
+                                <li class="append-region-item"><span class="append-region-swatch" style="background:#A97A47;"></span>南海</li>
+                                <li class="append-region-item"><span class="append-region-swatch" style="background:#B15A98;"></span>东南加勒比</li>
+                                <li class="append-region-item"><span class="append-region-swatch" style="background:#99C17B;"></span>亚热带东澳大利亚</li>
+                                <li class="append-region-item"><span class="append-region-swatch" style="background:#DF8B52;"></span>东北亚</li>
+                                <li class="append-region-item"><span class="append-region-swatch" style="background:#7297D6;"></span>热带东太平洋</li>
+                                <li class="append-region-item"><span class="append-region-swatch" style="background:#A57CEB;"></span>中南太平洋</li>
+                                <li class="append-region-item"><span class="append-region-swatch" style="background:#CCCCCC;"></span>小型礁区或低珊瑚覆盖区</li>
                             </ul>
                         </div>
                     </div>
@@ -2678,55 +2693,56 @@ I am trying to listen. To let the reef’s story be heard.
                     </defs>
                 </svg>
                 <div id="ocean-narr-labels-container">
+                    <!-- [双语加载时序] 海洋叙事默认中文，与 oh-i18n.js I18N.zh.append.ocean 一致 -->
                     <div class="cause-block" id="ocean-narr-label-warming" data-cause="warming">
                         <button type="button" class="cause-head" aria-expanded="false" aria-haspopup="dialog" data-chart-trigger>
-                            <span class="cause-kicker">Climate</span>
-                            <span class="cause-desc">Rising ocean temperatures trigger coral bleaching.</span>
-                            <span class="cause-head-hint">View charts</span>
+                            <span class="cause-kicker">气候</span>
+                            <span class="cause-desc">海水升温引发珊瑚白化。</span>
+                            <span class="cause-head-hint">查看图表</span>
                         </button>
                         <div class="cause-chart-slot">
                             <div class="cause-chart">
-                                <iframe title="Global surface temperature above pre-industrial levels" src="https://visualize.graphy.app/view/f0897b9c-84db-4c9b-b1bb-8ec962b1d6eb" loading="lazy" sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"></iframe>
-                                <a class="cause-chart-link" href="https://visualize.graphy.app/view/f0897b9c-84db-4c9b-b1bb-8ec962b1d6eb" target="_blank" rel="noopener noreferrer">Open chart in new tab</a>
+                                <iframe title="全球地表温度相对工业化前水平的升幅" src="https://visualize.graphy.app/view/f2457977-94db-48e0-9127-f4b99622c6af" loading="lazy" sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"></iframe>
+                                <a class="cause-chart-link" href="https://visualize.graphy.app/view/f2457977-94db-48e0-9127-f4b99622c6af" target="_blank" rel="noopener noreferrer">在新标签页打开图表</a>
                             </div>
                         </div>
                     </div>
                     <div class="cause-block" id="ocean-narr-label-acid" data-cause="acid">
                         <button type="button" class="cause-head" aria-expanded="false" aria-haspopup="dialog" data-chart-trigger>
-                            <span class="cause-kicker">Acidification</span>
-                            <span class="cause-desc">Lower pH weakens coral skeletons and slows growth.</span>
-                            <span class="cause-head-hint">View charts</span>
+                            <span class="cause-kicker">酸化</span>
+                            <span class="cause-desc">pH 降低削弱珊瑚骨骼并减缓生长。</span>
+                            <span class="cause-head-hint">查看图表</span>
                         </button>
                         <div class="cause-chart-slot">
                             <div class="cause-chart">
-                                <iframe title="Coral reef health: healthy vs degraded ecosystem indicators" src="https://visualize.graphy.app/view/2d4c0d72-af30-4078-bd38-d0f1dbb9aeb4" loading="lazy" sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"></iframe>
-                                <a class="cause-chart-link" href="https://visualize.graphy.app/view/2d4c0d72-af30-4078-bd38-d0f1dbb9aeb4" target="_blank" rel="noopener noreferrer">Open chart in new tab</a>
+                                <iframe title="珊瑚礁健康：健康与退化生态系统指标" src="https://visualize.graphy.app/view/8b1f00e6-f164-4cf7-ba79-24b1dcdc5150" loading="lazy" sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"></iframe>
+                                <a class="cause-chart-link" href="https://visualize.graphy.app/view/8b1f00e6-f164-4cf7-ba79-24b1dcdc5150" target="_blank" rel="noopener noreferrer">在新标签页打开图表</a>
                             </div>
                         </div>
                     </div>
                     <div class="cause-block" id="ocean-narr-label-pollution" data-cause="pollution">
                         <button type="button" class="cause-head" aria-expanded="false" aria-haspopup="dialog" data-chart-trigger>
-                            <span class="cause-kicker">Pollution</span>
-                            <span class="cause-desc">Waste and runoff smother reefs and poison ecosystems.</span>
-                            <span class="cause-head-hint">View charts</span>
+                            <span class="cause-kicker">污染</span>
+                            <span class="cause-desc">废弃物与径流窒息礁体并毒害生态系统。</span>
+                            <span class="cause-head-hint">查看图表</span>
                         </button>
                         <div class="cause-chart-slot">
                             <div class="cause-chart">
-                                <iframe title="Share of global plastic waste emitted to the ocean, 2019" src="https://visualize.graphy.app/view/187756f2-d395-471b-9e86-1bfacbb94d86" loading="lazy" sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"></iframe>
-                                <a class="cause-chart-link" href="https://visualize.graphy.app/view/187756f2-d395-471b-9e86-1bfacbb94d86" target="_blank" rel="noopener noreferrer">Open chart in new tab</a>
+                                <iframe title="2019 年全球进入海洋的塑料废弃物占比" src="https://visualize.graphy.app/view/c654fd3e-d3a5-4f17-804c-97db1e67bdad" loading="lazy" sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"></iframe>
+                                <a class="cause-chart-link" href="https://visualize.graphy.app/view/c654fd3e-d3a5-4f17-804c-97db1e67bdad" target="_blank" rel="noopener noreferrer">在新标签页打开图表</a>
                             </div>
                         </div>
                     </div>
                     <div class="cause-block" id="ocean-narr-label-overfish" data-cause="overfish">
                         <button type="button" class="cause-head" aria-expanded="false" aria-haspopup="dialog" data-chart-trigger>
-                            <span class="cause-kicker">Ocean Warming</span>
-                            <span class="cause-desc">Monthly global sea surface temperature shows a long-term rise, redistributing heat across ocean basins.</span>
-                            <span class="cause-head-hint">View charts</span>
+                            <span class="cause-kicker">海洋变暖</span>
+                            <span class="cause-desc">全球月均海表温度长期上升，热量在海盆间重新分布。</span>
+                            <span class="cause-head-hint">查看图表</span>
                         </button>
                         <div class="cause-chart-slot">
                             <div class="cause-chart">
-                                <iframe title="Monthly Global Sea Surface Temperature (1990–2024)" src="https://visualize.graphy.app/view/454a3f69-5f22-4235-8561-abfd68da73a2" loading="lazy" sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"></iframe>
-                                <a class="cause-chart-link" href="https://visualize.graphy.app/view/454a3f69-5f22-4235-8561-abfd68da73a2" target="_blank" rel="noopener noreferrer">Open chart in new tab</a>
+                                <iframe title="全球月均海表温度（1990–2024）" src="https://visualize.graphy.app/view/aa34bca7-f45e-4262-bd42-1a4c2b05b2bd" loading="lazy" sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"></iframe>
+                                <a class="cause-chart-link" href="https://visualize.graphy.app/view/aa34bca7-f45e-4262-bd42-1a4c2b05b2bd" target="_blank" rel="noopener noreferrer">在新标签页打开图表</a>
                             </div>
                         </div>
                     </div>
@@ -3209,9 +3225,10 @@ I am trying to listen. To let the reef’s story be heard.
                 <div class="append-viz-wrap">
                     <div class="append-viz-title" data-i18n="append.bleaching.vizTitle">02 · 白化率 1884—2019</div>
                     <div class="append-flourish-wrap">
-                        <div class="flourish-embed flourish-heatmap" data-src="visualisation/28786550">
-                            <noscript><img src="https://public.flourish.studio/visualisation/28786550/thumbnail" width="100%" alt="heatmap visualization"></noscript>
+                        <div class="flourish-embed flourish-heatmap" data-src="visualisation/28786550" data-oh-flourish-id="bleaching">
+                            <noscript><img src="https://public.flourish.studio/visualisation/28786550/thumbnail" width="100%" alt="白化热力图"></noscript>
                         </div>
+                        <p class="oh-flourish-tooltip-hint" data-oh-flourish-tip="bleaching" aria-live="polite"></p>
                     </div>
                 </div>
             </section>
@@ -3226,10 +3243,10 @@ I am trying to listen. To let the reef’s story be heard.
                 <div class="append-viz-wrap">
                     <div class="append-viz-title" data-i18n="append.radar.vizTitle">03 · 珊瑚白化压力雷达</div>
                     <div class="append-flourish-wrap">
-                        <div class="flourish-embed flourish-radar" data-src="visualisation/28793958">
-                            <script src="https://public.flourish.studio/resources/embed.js"></script>
-                            <noscript><img src="https://public.flourish.studio/visualisation/28793958/thumbnail" width="100%" alt="radar visualization"></noscript>
+                        <div class="flourish-embed flourish-radar" data-src="visualisation/28793958" data-oh-flourish-id="radar">
+                            <noscript><img src="https://public.flourish.studio/visualisation/28793958/thumbnail" width="100%" alt="胁迫雷达图"></noscript>
                         </div>
+                        <p class="oh-flourish-tooltip-hint" data-oh-flourish-tip="radar" aria-live="polite"></p>
                     </div>
                 </div>
             </section>
@@ -4402,6 +4419,75 @@ I am trying to listen. To let the reef’s story be heard.
             window.addEventListener('scroll', update, { passive: true });
             window.addEventListener('resize', update, { passive: true });
         })();
+    </script>
+
+    <!-- [Flourish 403 修复] 图表 tooltip 双语文案内联，不依赖 Flourish 远端接口 -->
+    <script>
+    window.OH_FLOURISH_TOOLTIPS = {
+        bleaching: {
+            zh: '悬停图表区域查看各礁区白化率变化；色带由浅至深表示白化强度上升（1884—2019）。',
+            en: 'Hover chart regions for bleaching rates over time; lighter to deeper colour shows rising intensity (1884–2019).'
+        },
+        radar: {
+            zh: '悬停各轴端点查看胁迫因子：外缘为升温、酸化、污染与过度捕捞等风险，靠近中心为礁体健康与恢复韧性。',
+            en: 'Hover axis points for stress factors: outer edge shows warming, acidification, pollution and fishing risk; center shows reef health and recovery.'
+        }
+    };
+    </script>
+
+    <!-- [Flourish 403 修复] window.load 单次初始化，生命周期内只请求 embed.js 一次 -->
+    <script>
+    (function () {
+        function mountFlourishEmbedsOnce() {
+            if (window.__ohFlourishInitLock) return;
+            window.__ohFlourishInitLock = true;
+            window.Flourish = window.Flourish || {};
+            window.Flourish.disable_autoload = true;
+
+            function loadAll() {
+                document.querySelectorAll('#append-root .flourish-embed[data-src]').forEach(function (el) {
+                    if (el.getAttribute('data-oh-flourish-mounted') === '1') return;
+                    el.setAttribute('data-oh-flourish-mounted', '1');
+                    if (typeof window.Flourish.loadEmbed === 'function') {
+                        window.Flourish.loadEmbed(el);
+                    }
+                });
+                if (typeof window.applyOhFlourishTooltipText === 'function') {
+                    var lang = (typeof getOhLang === 'function') ? getOhLang() : (window.__ohBootLang || 'zh');
+                    window.applyOhFlourishTooltipText(lang);
+                }
+            }
+
+            if (typeof window.Flourish.loadEmbed === 'function') {
+                loadAll();
+                return;
+            }
+
+            var script = document.querySelector('script[data-oh-flourish-embed]');
+            if (!script) {
+                script = document.createElement('script');
+                script.src = 'https://public.flourish.studio/resources/embed.js';
+                script.setAttribute('data-oh-flourish-embed', '1');
+                script.async = true;
+                document.head.appendChild(script);
+            }
+            if (script.getAttribute('data-oh-loaded') === '1') {
+                loadAll();
+                return;
+            }
+            function onReady() {
+                script.setAttribute('data-oh-loaded', '1');
+                loadAll();
+            }
+            if (script.readyState === 'complete' || script.readyState === 'loaded') {
+                onReady();
+            } else {
+                script.addEventListener('load', onReady, { once: true });
+            }
+        }
+
+        window.addEventListener('load', mountFlourishEmbedsOnce, { once: true });
+    })();
     </script>
 
 </body>
