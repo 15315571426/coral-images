@@ -450,16 +450,26 @@ I am trying to listen. To let the reef's story be heard.`
         if (oceanSection) oceanSection.setAttribute('aria-label', pack.aria);
     }
 
-    function applyFlourishEmbeds(lang) {
+    /* [Flourish 403 修复] 语言切换仅更新内联 tooltip 文案，不重载 iframe/embed.js */
+    function applyFlourishTooltipText(lang) {
+        const tips = global.OH_FLOURISH_TOOLTIPS;
+        if (tips) {
+            document.querySelectorAll('[data-oh-flourish-tip]').forEach(function (el) {
+                const key = el.getAttribute('data-oh-flourish-tip');
+                const pack = tips[key];
+                if (pack && pack[lang] !== undefined) el.textContent = pack[lang];
+            });
+        }
         const root = document.getElementById('append-root');
         if (!root) return;
-        const entries = [
-            { wrap: root.querySelector('#append-bleaching-section .append-flourish-wrap'), cfg: I18N[lang].append.bleaching },
-            { wrap: root.querySelector('#append-timeline-section .append-flourish-wrap'), cfg: I18N[lang].append.radar }
-        ];
-        entries.forEach(({ wrap, cfg }) => {
-            mountFlourishInWrap(wrap, cfg);
-        });
+        const bleachingNs = root.querySelector('#append-bleaching-section noscript img');
+        const radarNs = root.querySelector('#append-timeline-section noscript img');
+        if (bleachingNs && I18N[lang].append.bleaching.noscriptAlt) {
+            bleachingNs.alt = I18N[lang].append.bleaching.noscriptAlt;
+        }
+        if (radarNs && I18N[lang].append.radar.noscriptAlt) {
+            radarNs.alt = I18N[lang].append.radar.noscriptAlt;
+        }
     }
 
     function applyDomI18n(lang) {
@@ -520,7 +530,7 @@ I am trying to listen. To let the reef's story be heard.`
         applyJournal(lang);
         updateAtlasLegend(lang);
         try { applyOceanCauses(lang); } catch (e) { /* [双语加载时序] iframe 失败不阻断切换 */ }
-        try { applyFlourishEmbeds(lang); } catch (e) { /* [双语加载时序] Flourish 失败不阻断切换 */ }
+        try { applyFlourishTooltipText(lang); } catch (e) { /* [Flourish 403 修复] 仅切换文案 */ }
         global.__ohAtlasRegions = buildAtlasRegions(lang);
         global.dispatchEvent(new CustomEvent('oh-lang-change', { detail: { lang } }));
         requestAnimationFrame(function () {
@@ -561,6 +571,7 @@ I am trying to listen. To let the reef's story be heard.`
     global.atlasRiskClassByKey = atlasRiskClass;
     global.applyOhLanguage = applyLanguage;
     global.toggleOhLanguage = toggleLanguage;
+    global.applyOhFlourishTooltipText = applyFlourishTooltipText;
     global.__ohAtlasRegions = buildAtlasRegions('zh');
 
     // [双语加载时序] DOMContentLoaded 第一时间绑定切换按钮，再应用语言
