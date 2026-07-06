@@ -1,17 +1,40 @@
+<!-- [GitHub Pages] the-oceans-heartbeat-bilingual.html — 外链双语部署版 -->
 <html lang="zh-CN">
 <head>
+    <!-- [双语加载时序] 必须最先执行：读 localStorage → 设 html lang → 注入 .text-en/.text-zh 关键 CSS -->
+    <script>
+    (function () {
+        var lang = 'zh';
+        try {
+            var stored = localStorage.getItem('oh-lang');
+            if (stored === 'en' || stored === 'zh') lang = stored;
+        } catch (e) { /* ignore */ }
+        var root = document.documentElement;
+        root.lang = lang === 'zh' ? 'zh-CN' : 'en';
+        root.classList.add(lang === 'zh' ? 'oh-lang-zh' : 'oh-lang-en');
+        var css = lang === 'zh'
+            ? 'html .text-en{display:none!important}html .text-zh{display:revert}'
+            : 'html .text-zh{display:none!important}html .text-en{display:revert}';
+        var style = document.createElement('style');
+        style.id = 'oh-lang-critical';
+        style.textContent = css;
+        document.head.appendChild(style);
+        window.__ohBootLang = lang;
+    })();
+    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="theme-color" content="#f2f2f2">
     <title>海洋的心跳 · 珊瑚礁可视化</title>
-    <script>try{var _l=localStorage.getItem('oh-lang');if(_l==='en'||_l==='zh')document.documentElement.lang=_l==='zh'?'zh-CN':'en';}catch(e){}</script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="dns-prefetch" href="https://unpkg.com">
     <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
     <link rel="dns-prefetch" href="https://raw.githubusercontent.com">
     <link rel="dns-prefetch" href="https://public.flourish.studio">
+    <!-- [双语加载时序] 中文排版字体，外链引入（与本地部署版一致） -->
     <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <!-- [双语加载时序] 中文排版样式，外链引入，不内联 -->
     <link rel="stylesheet" href="oh-zh-typography.css">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -798,9 +821,10 @@
             will-change: transform;
         }
     </style>
+    <!-- [双语加载时序] 外链 i18n 脚本 defer，DOM 解析完成后尽早执行，不阻塞渲染 -->
+    <script src="oh-i18n.js" defer></script>
 </head>
 <body>
-    <script src="oh-i18n.js"></script>
     <div id="page-scroll-progress" class="page-scroll-progress" aria-hidden="true">
         <div class="page-scroll-progress__fill"></div>
     </div>
